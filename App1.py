@@ -72,10 +72,10 @@ sorted_components = sorted(filtered_components, key=get_stroke_count)
 # === Component selection ===
 def on_text_input_change():
     text_value = st.session_state.text_input_comp.strip()
-    if text_value and text_value in component_map:
+    if text_value and (text_value in component_map or text_value in char_decomp):
         st.session_state.selected_comp = text_value
     elif text_value:
-        st.warning("Invalid component entered. Please select from the dropdown or enter a valid component.")
+        st.warning("Character not found in component map or dictionary. Please enter a valid character.")
 
 col_a, col_b = st.columns(2)
 with col_a:
