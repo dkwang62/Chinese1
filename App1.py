@@ -39,6 +39,8 @@ def build_component_map(max_depth):
         all_components = get_all_components(char, max_depth=max_depth)
         for comp in all_components:
             component_map[comp].append(char)
+        # Include the character itself as a component
+        component_map[char].append(char)
     return component_map
 
 # === Step 4: Controls ===
