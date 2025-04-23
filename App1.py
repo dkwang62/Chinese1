@@ -121,4 +121,5 @@ if st.session_state.selected_comp:
         compounds = entry.get("compounds", [])
         if compounds:
             st.markdown(f"**Compound Words for {c}:**")
-            st.write(" ".join(compounds))
+            sorted_compounds = sorted(compounds, key=len)
+            st.write(" ".join(sorted_compounds))
