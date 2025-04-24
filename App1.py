@@ -5,7 +5,7 @@ import streamlit as st
 st.set_page_config(layout="wide")
 
 st.markdown("""
-<h1 style='font-size: 1.8em;'>🧩 Compound Characters Explorer</h1>
+<h1 style='font-size: 2.2em;'>🧩 Compound Characters Explorer</h1>
 """, unsafe_allow_html=True)
 
 # === Step 1: Load strokes1.json from local file (cached) ===
