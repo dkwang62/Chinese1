@@ -113,11 +113,6 @@ def build_component_map(max_depth):
             if char not in component_map[comp]:
                 component_map[comp].append(char)
     
-    # Debugging output in a collapsible section
-    with st.expander("Debug: Component Map for ⺌ and 小"):
-        st.write(f"Characters mapped to ⺌: {sorted(component_map['⺌'])}")
-        st.write(f"Characters mapped to 小: {sorted(component_map['小'])}")
-    
     return component_map
 
 # === Step 4: Controls ===
@@ -141,7 +136,6 @@ component_map = build_component_map(max_depth=st.session_state.max_depth)
 def get_stroke_count(char):
     strokes = char_decomp.get(char, {}).get("strokes", None)
     if strokes is None:
-        st.warning(f"No stroke count for {char}, excluding from results")
         return -1  # Use a negative value to ensure exclusion
     return strokes
 
