@@ -166,8 +166,7 @@ def on_text_input_change():
 
 col_a, col_b = st.columns(2)
 with col_a:
-    st.select WARN: No stroke count for 几, excluding from results
-box(
+    st.selectbox(
         "Select a component:",
         options=sorted_components,
         format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
