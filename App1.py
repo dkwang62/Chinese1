@@ -5,7 +5,7 @@ import streamlit as st
 st.set_page_config(layout="wide")
 
 st.markdown("""
-<h1 style='font-size: 1.8em;'>🧩 Character Decomposition Explorer</h1>
+<h1 style='font-size: 1.2em;'>🧩 Compound Characters Explorer</h1>
 """, unsafe_allow_html=True)
 
 # === Step 1: Load strokes1.json from local file (cached) ===
@@ -55,7 +55,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
 with col2:
-    st.slider("Stroke Count Range", 0, 30, key="stroke_range")
+    st.slider("Strokes Range", 0, 30, key="stroke_range")
 
 min_strokes, max_strokes = st.session_state.stroke_range
 component_map = build_component_map(max_depth=st.session_state.max_depth)
@@ -96,24 +96,30 @@ with col_b:
         on_change=on_text_input_change
     )
 
-# === Display current selection ===
-st.markdown(f"""
-<h2 style='font-size: 1.2em;'>📌 Current Selection</h2>
-<p><strong>Component:</strong> {st.session_state.selected_comp}    <strong>Level:</strong> {st.session_state.max_depth}    <strong>Stroke Range:</strong> {min_strokes} – {max_strokes}</p>
-""", unsafe_allow_html=True)
-
-# === Step 5: Display decomposed characters ===
+# === Display current selection and decomposed characters ===
 if st.session_state.selected_comp:
+    # Get characters that contain the selected component and have stroke counts in range
     chars = [
         c for c in component_map.get(st.session_state.selected_comp, [])
         if min_strokes <= get_stroke_count(c) <= max_strokes
     ]
+    # Sort and remove duplicates
     chars = sorted(set(chars))
 
-    st.markdown(
-        f"<h2 style='font-size: 1.2em;'>🧬 Characters with: {st.session_state.selected_comp} — {len(chars)} result(s)</h2>",
-        unsafe_allow_html=True
-    )
+    # Display all elements in a single row using flexbox
+    st.markdown(f"""
+    <div style='display: flex; align-items: center; gap: 20px;'>
+        <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
+        <span style='font-size: 2.4em;'>{st.session_state.selected_comp}</span>
+        <p style='margin: 0;'>
+            <strong>Depth:</strong> {st.session_state.max_depth}    
+            <strong>Strokes:</strong> {min_strokes} – {max_strokes}
+        </p>
+        <h2 style='font-size: 1.2em; margin: 0;'>🧬 Characters with: {st.session_state.selected_comp} — {len(chars)} result(s)</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Display character details and compounds
     for c in chars:
         entry = char_decomp.get(c, {})
         pinyin = entry.get("pinyin", "—")
