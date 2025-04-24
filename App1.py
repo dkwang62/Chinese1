@@ -63,26 +63,46 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
 @st.cache_data
 def build_component_map(max_depth):
     component_map = defaultdict(list)
-    # Track direct components for debugging
-    direct_components = defaultdict(set)
+    # Track direct components for each character
+    char_to_components = defaultdict(set)
     
     # Define radical variants for dropdown availability
     radical_variants = {'⺌': '小', '小': '⺌'}
     
-    # First pass: Map characters to their direct components
+    # First pass: Map each character to its direct components
     for char in char_decomp:
-        all_components = get_all_components(char, max_depth=max_depth)
-        for comp in all_components:
-            direct_components[comp].add(char)
-        direct_components[char].add(char)
+        decomposition = char_decomp.get(char, {}).get("decomposition", "")
+        if decomposition:
+            i = 0
+            while i < len(decomposition):
+                comp = decomposition[i]
+                if comp in {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}:
+                    i += 1
+                    continue
+                if ('一' <= comp <= '鿿' or
+                    '\u2E80' <= comp <= '\u2EFF' or
+                    '\u3400' <= comp <= '\u4DBF' or
+                    '\U00020000' <= '\U0002A6DF'):
+                    char_to_components[char].add(comp)
+                    # Recursively get sub-components
+                    sub_components = get_all_components(comp, max_depth=max_depth)
+                    char_to_components[char].update(sub_components)
+                i += 1
+        # Include the character itself as a component
+        char_to_components[char].add(char)
     
-    # Second pass: Build component_map, ensuring variants are available but not merged
+    # Second pass: Invert the mapping (component -> characters)
+    direct_components = defaultdict(set)
+    for char, components in char_to_components.items():
+        for comp in components:
+            direct_components[comp].add(char)
+    
+    # Third pass: Build component_map without merging variants
     for comp, chars in direct_components.items():
         component_map[comp].extend(chars)
         # Ensure the variant is in the map (for dropdown), but don't merge results
         if comp in radical_variants:
             variant = radical_variants[comp]
-            # Add variant as a key if not present, but don't copy the characters
             if variant not in component_map:
                 component_map[variant] = []
     
@@ -104,7 +124,7 @@ def build_component_map(max_depth):
 if "selected_comp" not in st.session_state:
     st.session_state.selected_comp = "⺌"
 if "max_depth" not in st.session_state:
-    st.session_state.max_depth = 0  # Matches screenshot
+    st.session_state.max_depth = 0
 if "stroke_range" not in st.session_state:
     st.session_state.stroke_range = (3, 14)
 
@@ -146,7 +166,8 @@ def on_text_input_change():
 
 col_a, col_b = st.columns(2)
 with col_a:
-    st.selectbox(
+    st.select WARN: No stroke count for 几, excluding from results
+box(
         "Select a component:",
         options=sorted_components,
         format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
