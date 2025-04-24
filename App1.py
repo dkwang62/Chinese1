@@ -38,8 +38,6 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
     if not decomposition:
         return components
 
-    # Define radical variants
-    radical_variants = {'⺌': '小', '小': '⺌'}
     # IDC characters to skip
     idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
 
@@ -56,8 +54,6 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
             '\u3400' <= comp <= '\u4DBF' or
             '\U00020000' <= '\U0002A6DF'):
             components.add(comp)
-            if comp in radical_variants:
-                components.add(radical_variants[comp])
             branch_seen = seen.copy()
             components.update(get_all_components(comp, max_depth, depth + 1, branch_seen))
         i += 1
@@ -67,17 +63,30 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
 @st.cache_data
 def build_component_map(max_depth):
     component_map = defaultdict(list)
+    # Track direct components for debugging
+    direct_components = defaultdict(set)
+    
+    # Define radical variants for dropdown availability
     radical_variants = {'⺌': '小', '小': '⺌'}
     
+    # First pass: Map characters to their direct components
     for char in char_decomp:
         all_components = get_all_components(char, max_depth=max_depth)
         for comp in all_components:
-            component_map[comp].append(char)
-            if comp in radical_variants:
-                component_map[radical_variants[comp]].append(char)
-        component_map[char].append(char)
+            direct_components[comp].add(char)
+        direct_components[char].add(char)
     
-    # Temporary fallback mapping for ⺌/小
+    # Second pass: Build component_map, ensuring variants are available but not merged
+    for comp, chars in direct_components.items():
+        component_map[comp].extend(chars)
+        # Ensure the variant is in the map (for dropdown), but don't merge results
+        if comp in radical_variants:
+            variant = radical_variants[comp]
+            # Add variant as a key if not present, but don't copy the characters
+            if variant not in component_map:
+                component_map[variant] = []
+    
+    # Temporary fallback mapping for ⺌ and 小
     expected_chars = ['光', '嗩', '尚', '当']
     for comp in ['⺌', '小']:
         for char in expected_chars:
@@ -95,7 +104,7 @@ def build_component_map(max_depth):
 if "selected_comp" not in st.session_state:
     st.session_state.selected_comp = "⺌"
 if "max_depth" not in st.session_state:
-    st.session_state.max_depth = 2
+    st.session_state.max_depth = 0  # Matches screenshot
 if "stroke_range" not in st.session_state:
     st.session_state.stroke_range = (3, 14)
 
@@ -112,7 +121,6 @@ component_map = build_component_map(max_depth=st.session_state.max_depth)
 def get_stroke_count(char):
     strokes = char_decomp.get(char, {}).get("strokes", None)
     if strokes is None:
-        # Debug missing stroke counts and exclude from results
         st.warning(f"No stroke count for {char}, excluding from results")
         return -1  # Use a negative value to ensure exclusion
     return strokes
@@ -163,7 +171,7 @@ if st.session_state.selected_comp:
     # Sort and remove duplicates
     chars = sorted(set(chars))
 
-    # Restored single-row flexbox display
+    # Single-row flexbox display
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
         <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
