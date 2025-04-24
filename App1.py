@@ -11,9 +11,16 @@ st.markdown("""
 # === Step 1: Load strokes1.json from local file (cached) ===
 @st.cache_data
 def load_char_decomp():
-    with open("strokes1.json", "r", encoding="utf-8") as f:
-        entries = json.load(f)
-        return {entry["character"]: entry for entry in entries}
+    try:
+        with open("strokes1.json", "r", encoding="utf-8") as f:
+            entries = json.load(f)
+            return {entry["character"]: entry for entry in entries}
+    except FileNotFoundError:
+        st.error("Error: strokes1.json file not found.")
+        return {}
+    except json.JSONDecodeError:
+        st.error("Error: strokes1.json is malformed or invalid JSON.")
+        return {}
 
 char_decomp = load_char_decomp()
 
