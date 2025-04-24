@@ -36,9 +36,10 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
     # Get decomposition, with fallback for missing data
     decomposition = char_decomp.get(char, {}).get("decomposition", "")
     if not decomposition:
-        # Optionally log missing decomposition for debugging
-        # st.warning(f"No decomposition found for character: {char}")
         return components
+
+    # Define radical variants (e.g., ⺌ and 小 are treated as equivalent)
+    radical_variants = {'⺌': '小', '小': '⺌'}
 
     for comp in decomposition:
         # Expanded Unicode range to include CJK Extensions and radicals
@@ -47,33 +48,39 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
             '\u3400' <= comp <= '\u4DBF' or  # CJK Extension A (U+3400–U+4DBF)
             '\U00020000' <= comp <= '\U0002A6DF'):  # CJK Extension B (U+20000–U+2A6DF)
             components.add(comp)
-            # Create a new seen set for this branch to allow revisiting in other branches
+            # Add variant radical if it exists
+            if comp in radical_variants:
+                components.add(radical_variants[comp])
+            # Create a new seen set for this branch
             branch_seen = seen.copy()
             components.update(get_all_components(comp, max_depth, depth + 1, branch_seen))
-        # Optionally log non-character components (e.g., IDS operators) for debugging
-        # elif comp in {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}:
-        #     st.info(f"IDS operator {comp} found in {char}, skipped.")
     return components
 
 # === Step 3: Build component map (cached) ===
 @st.cache_data
 def build_component_map(max_depth):
     component_map = defaultdict(list)
+    # Define radical variants
+    radical_variants = {'⺌': '小', '小': '⺌'}
+    
     for char in char_decomp:
         all_components = get_all_components(char, max_depth=max_depth)
         for comp in all_components:
             component_map[comp].append(char)
+            # If the component is a radical variant, also map to its variant
+            if comp in radical_variants:
+                component_map[radical_variants[comp]].append(char)
         # Include the character itself as a component
         component_map[char].append(char)
     return component_map
 
 # === Step 4: Controls ===
 if "selected_comp" not in st.session_state:
-    st.session_state.selected_comp = "木"
+    st.session_state.selected_comp = "⺌"  # Set to ⺌ for testing
 if "max_depth" not in st.session_state:
     st.session_state.max_depth = 1
 if "stroke_range" not in st.session_state:
-    st.session_state.stroke_range = (4, 10)
+    st.session_state.stroke_range = (4, 14)  # Expanded to include 嗩 (14 strokes)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -155,3 +162,4 @@ if st.session_state.selected_comp:
             st.markdown(f"**Compound Words for {c}:**")
             sorted_compounds = sorted(compounds, key=len)
             st.write(" ".join(sorted_compounds))
+```
