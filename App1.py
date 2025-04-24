@@ -1,4 +1,3 @@
-```python
 import json
 from collections import defaultdict
 import streamlit as st
