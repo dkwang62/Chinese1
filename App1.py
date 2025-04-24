@@ -54,7 +54,7 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
         if ('一' <= comp <= '鿿' or
             '\u2E80' <= comp <= '\u2EFF' or
             '\u3400' <= comp <= '\u4DBF' or
-            '\U00020000' <= comp <= '\U0002A6DF'):
+            '\U00020000' <= '\U0002A6DF'):
             components.add(comp)
             if comp in radical_variants:
                 components.add(radical_variants[comp])
@@ -77,10 +77,6 @@ def build_component_map(max_depth):
                 component_map[radical_variants[comp]].append(char)
         component_map[char].append(char)
     
-    # Debug mapping for ⺌ and 小
-    st.write(f"Characters mapped to ⺌: {sorted(component_map['⺌'])}")
-    st.write(f"Characters mapped to 小: {sorted(component_map['小'])}")
-    
     # Temporary fallback mapping for ⺌/小
     expected_chars = ['光', '嗩', '尚', '当']
     for comp in ['⺌', '小']:
@@ -88,15 +84,20 @@ def build_component_map(max_depth):
             if char not in component_map[comp]:
                 component_map[comp].append(char)
     
+    # Debugging output in a collapsible section
+    with st.expander("Debug: Component Map for ⺌ and 小"):
+        st.write(f"Characters mapped to ⺌: {sorted(component_map['⺌'])}")
+        st.write(f"Characters mapped to 小: {sorted(component_map['小'])}")
+    
     return component_map
 
 # === Step 4: Controls ===
 if "selected_comp" not in st.session_state:
     st.session_state.selected_comp = "⺌"
 if "max_depth" not in st.session_state:
-    st.session_state.max_depth = 2  # Matches UI screenshot
+    st.session_state.max_depth = 2
 if "stroke_range" not in st.session_state:
-    st.session_state.stroke_range = (3, 14)  # Matches UI screenshot
+    st.session_state.stroke_range = (3, 14)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -111,9 +112,9 @@ component_map = build_component_map(max_depth=st.session_state.max_depth)
 def get_stroke_count(char):
     strokes = char_decomp.get(char, {}).get("strokes", None)
     if strokes is None:
-        # Debug missing stroke counts
-        st.warning(f"No stroke count for {char}, defaulting to 0")
-        return 0
+        # Debug missing stroke counts and exclude from results
+        st.warning(f"No stroke count for {char}, excluding from results")
+        return -1  # Use a negative value to ensure exclusion
     return strokes
 
 # === Filter dropdown options ===
@@ -162,7 +163,7 @@ if st.session_state.selected_comp:
     # Sort and remove duplicates
     chars = sorted(set(chars))
 
-    # Display all elements in a single row using flexbox
+    # Restored single-row flexbox display
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
         <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
