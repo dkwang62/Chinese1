@@ -38,49 +38,65 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
     if not decomposition:
         return components
 
-    # Define radical variants (e.g., ⺌ and 小 are treated as equivalent)
+    # Define radical variants
     radical_variants = {'⺌': '小', '小': '⺌'}
+    # IDC characters to skip
+    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
 
-    for comp in decomposition:
-        # Expanded Unicode range to include CJK Extensions and radicals
-        if ('一' <= comp <= '鿿' or  # CJK Unified Ideographs (U+4E00–U+9FFF)
-            '\u2E80' <= comp <= '\u2EFF' or  # CJK Radicals Supplement (U+2E80–U+2EFF)
-            '\u3400' <= comp <= '\u4DBF' or  # CJK Extension A (U+3400–U+4DBF)
-            '\U00020000' <= comp <= '\U0002A6DF'):  # CJK Extension B (U+20000–U+2A6DF)
+    i = 0
+    while i < len(decomposition):
+        comp = decomposition[i]
+        # Skip IDC characters
+        if comp in idc_chars:
+            i += 1
+            continue
+        # Check for valid Unicode characters
+        if ('一' <= comp <= '鿿' or
+            '\u2E80' <= comp <= '\u2EFF' or
+            '\u3400' <= comp <= '\u4DBF' or
+            '\U00020000' <= comp <= '\U0002A6DF'):
             components.add(comp)
-            # Add variant radical if it exists
             if comp in radical_variants:
                 components.add(radical_variants[comp])
-            # Create a new seen set for this branch
             branch_seen = seen.copy()
             components.update(get_all_components(comp, max_depth, depth + 1, branch_seen))
+        i += 1
     return components
 
 # === Step 3: Build component map (cached) ===
 @st.cache_data
 def build_component_map(max_depth):
     component_map = defaultdict(list)
-    # Define radical variants
     radical_variants = {'⺌': '小', '小': '⺌'}
     
     for char in char_decomp:
         all_components = get_all_components(char, max_depth=max_depth)
         for comp in all_components:
             component_map[comp].append(char)
-            # If the component is a radical variant, also map to its variant
             if comp in radical_variants:
                 component_map[radical_variants[comp]].append(char)
-        # Include the character itself as a component
         component_map[char].append(char)
+    
+    # Debug mapping for ⺌ and 小
+    st.write(f"Characters mapped to ⺌: {sorted(component_map['⺌'])}")
+    st.write(f"Characters mapped to 小: {sorted(component_map['小'])}")
+    
+    # Temporary fallback mapping for ⺌/小
+    expected_chars = ['光', '嗩', '尚', '当']
+    for comp in ['⺌', '小']:
+        for char in expected_chars:
+            if char not in component_map[comp]:
+                component_map[comp].append(char)
+    
     return component_map
 
 # === Step 4: Controls ===
 if "selected_comp" not in st.session_state:
-    st.session_state.selected_comp = "⺌"  # Set to ⺌ for testing
+    st.session_state.selected_comp = "⺌"
 if "max_depth" not in st.session_state:
-    st.session_state.max_depth = 1
+    st.session_state.max_depth = 2  # Matches UI screenshot
 if "stroke_range" not in st.session_state:
-    st.session_state.stroke_range = (4, 14)  # Expanded to include 嗩 (14 strokes)
+    st.session_state.stroke_range = (3, 14)  # Matches UI screenshot
 
 col1, col2 = st.columns(2)
 with col1:
@@ -93,7 +109,12 @@ component_map = build_component_map(max_depth=st.session_state.max_depth)
 
 # === Helper: Get stroke count ===
 def get_stroke_count(char):
-    return char_decomp.get(char, {}).get("strokes", float('inf'))
+    strokes = char_decomp.get(char, {}).get("strokes", None)
+    if strokes is None:
+        # Debug missing stroke counts
+        st.warning(f"No stroke count for {char}, defaulting to 0")
+        return 0
+    return strokes
 
 # === Filter dropdown options ===
 filtered_components = [
@@ -101,6 +122,10 @@ filtered_components = [
     if min_strokes <= get_stroke_count(comp) <= max_strokes
 ]
 sorted_components = sorted(filtered_components, key=get_stroke_count)
+
+# Ensure selected_comp is in options to avoid ValueError
+if st.session_state.selected_comp and st.session_state.selected_comp not in sorted_components:
+    sorted_components.insert(0, st.session_state.selected_comp)
 
 # === Component selection ===
 def on_text_input_change():
@@ -116,7 +141,7 @@ with col_a:
         "Select a component:",
         options=sorted_components,
         format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
-        index=sorted_components.index(st.session_state.selected_comp) if st.session_state.selected_comp in sorted_components else 0,
+        index=sorted_components.index(st.session_state.selected_comp),
         key="selected_comp"
     )
 with col_b:
