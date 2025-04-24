@@ -162,4 +162,3 @@ if st.session_state.selected_comp:
             st.markdown(f"**Compound Words for {c}:**")
             sorted_compounds = sorted(compounds, key=len)
             st.write(" ".join(sorted_compounds))
-```
