@@ -1,3 +1,4 @@
+```python
 import json
 from collections import defaultdict
 import streamlit as st
@@ -5,7 +6,7 @@ import streamlit as st
 st.set_page_config(layout="wide")
 
 st.markdown("""
-<h1 style='font-size: 2.8em;'>🧩 Compound Characters Explorer</h1>
+<h1 style='font-size: 1.2em;'>🧩 Compound Characters Explorer</h1>
 """, unsafe_allow_html=True)
 
 # === Step 1: Load strokes1.json from local file (cached) ===
@@ -25,17 +26,34 @@ def load_char_decomp():
 char_decomp = load_char_decomp()
 
 # === Step 2: Recursive decomposition ===
-def get_all_components(char, max_depth=2, depth=0, seen=None):
+def get_all_components(char, max_depth=5, depth=0, seen=None):
     if seen is None:
         seen = set()
     if char in seen or depth > max_depth:
         return set()
     seen.add(char)
     components = set()
-    for comp in char_decomp.get(char, {}).get("decomposition", ""):
-        if '一' <= comp <= '鿿':
+
+    # Get decomposition, with fallback for missing data
+    decomposition = char_decomp.get(char, {}).get("decomposition", "")
+    if not decomposition:
+        # Optionally log missing decomposition for debugging
+        # st.warning(f"No decomposition found for character: {char}")
+        return components
+
+    for comp in decomposition:
+        # Expanded Unicode range to include CJK Extensions and radicals
+        if ('一' <= comp <= '鿿' or  # CJK Unified Ideographs (U+4E00–U+9FFF)
+            '\u2E80' <= comp <= '\u2EFF' or  # CJK Radicals Supplement (U+2E80–U+2EFF)
+            '\u3400' <= comp <= '\u4DBF' or  # CJK Extension A (U+3400–U+4DBF)
+            '\U00020000' <= comp <= '\U0002A6DF'):  # CJK Extension B (U+20000–U+2A6DF)
             components.add(comp)
-            components.update(get_all_components(comp, max_depth, depth + 1, seen))
+            # Create a new seen set for this branch to allow revisiting in other branches
+            branch_seen = seen.copy()
+            components.update(get_all_components(comp, max_depth, depth + 1, branch_seen))
+        # Optionally log non-character components (e.g., IDS operators) for debugging
+        # elif comp in {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}:
+        #     st.info(f"IDS operator {comp} found in {char}, skipped.")
     return components
 
 # === Step 3: Build component map (cached) ===
@@ -116,7 +134,7 @@ if st.session_state.selected_comp:
     # Display all elements in a single row using flexbox
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
-        <h2 style='font-size: 1.2em; margin: 0;'>📌</h2>
+        <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
         <span style='font-size: 2.4em;'>{st.session_state.selected_comp}</span>
         <p style='margin: 0;'>
             <strong>Depth:</strong> {st.session_state.max_depth}    
