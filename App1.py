@@ -182,8 +182,8 @@ if st.session_state.selected_comp:
         c for c in component_map.get(st.session_state.selected_comp, [])
         if min_strokes <= get_stroke_count(c) <= max_strokes
     ]
-    # Sort and remove duplicates
-    chars = sorted(set(chars))
+    # Sort by stroke count (lowest to highest) and remove duplicates
+    chars = sorted(set(chars), key=get_stroke_count)
 
     # Single-row flexbox display
     st.markdown(f"""
@@ -198,12 +198,14 @@ if st.session_state.selected_comp:
     </div>
     """, unsafe_allow_html=True)
 
-    # Display character details and compounds
+    # Display character details and compounds with stroke count
     for c in chars:
         entry = char_decomp.get(c, {})
         pinyin = entry.get("pinyin", "—")
         definition = entry.get("definition", "No definition available")
-        st.write(f"**{c}** — {pinyin} — {definition}")
+        stroke_count = get_stroke_count(c)
+        stroke_text = f"{stroke_count} strokes" if stroke_count != -1 else "unknown strokes"
+        st.write(f"**{c}** — {pinyin} — {definition} ({stroke_text})")
 
         compounds = entry.get("compounds", [])
         if compounds:
