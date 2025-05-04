@@ -106,18 +106,69 @@ with col1:
 with col2:
     st.slider("Strokes Range", 0, 30, key="stroke_range")
 
-# Add display mode selection
-st.radio(
-    "Display Mode:",
-    options=["Minimalist", "2-Character Phrases", "4-Character Idioms", "All Other Compounds"],
-    key="display_mode",
-    help=(
-        "Minimalist: Shows character, pinyin, definition, and strokes. "
-        "2-Character Phrases: Shows characters with 2-character compound words. "
-        "4-Character Idioms: Shows characters with 4-character compound words. "
-        "All Other Compounds: Shows characters with compound words of other lengths."
-    )
-)
+# === Display current selection and decomposed characters ===
+if st.session_state.selected_comp:
+    # Base character list for Minimalist mode
+    chars = [
+        c for c in component_map.get(st.session_state.selected_comp, [])
+        if min_strokes <= get_stroke_count(c) <= max_strokes
+    ]
+
+    # Prepare filtered characters and their compounds based on display mode
+    filtered_chars = []
+    char_compounds = {}
+
+    for c in chars:
+        entry = char_decomp.get(c, {})
+        compounds = entry.get("compounds", []) or []
+        if not compounds:
+            continue  # Skip characters with no compounds for all modes
+
+        if st.session_state.display_mode == "Minimalist":
+            filtered_chars.append(c)
+            char_compounds[c] = []
+        else:
+            # Filter compounds based on display mode
+            if st.session_state.display_mode == "2-Character Phrases":
+                filtered_compounds = [comp for comp in compounds if len(comp) == 2]
+            elif st.session_state.display_mode == "3-Character Phrases":
+                filtered_compounds = [comp for comp in compounds if len(comp) == 3]
+            elif st.session_state.display_mode == "4-Character Idioms":
+                filtered_compounds = [comp for comp in compounds if len(comp) == 4]
+
+            # Only include the character if it has compounds that match the filter
+            if filtered_compounds:
+                filtered_chars.append(c)
+                char_compounds[c] = filtered_compounds
+
+    chars = sorted(set(filtered_chars), key=get_stroke_count)
+
+    st.markdown(f"""
+    <div style='display: flex; align-items: center; gap: 20px;'>
+        <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
+        <span style='font-size: 2.4em;'>{st.session_state.selected_comp}</span>
+        <p style='margin: 0;'>
+            <strong>Depth:</strong> {st.session_state.max_depth}    
+            <strong>Strokes:</strong> {min_strokes} – {max_strokes}
+        </p>
+        <h2 style='font-size: 1.2em; margin: 0;'>🧬 Characters with: {st.session_state.selected_comp} — {len(chars)} result(s)</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    for c in chars:
+        entry = char_decomp.get(c, {})
+        pinyin = entry.get("pinyin", "—")
+        definition = entry.get("definition", "No definition available")
+        stroke_count = get_stroke_count(c)
+        stroke_text = f"{stroke_count} strokes" if stroke_count != -1 else "unknown strokes"
+        st.write(f"**{c}** — {pinyin} — {definition} ({stroke_text})")
+
+        if st.session_state.display_mode != "Minimalist":
+            filtered_compounds = char_compounds.get(c, [])
+            if filtered_compounds:  # Redundant check for clarity
+                st.markdown(f"**{st.session_state.display_mode} for {c}:**")
+                sorted_compounds = sorted(filtered_compounds, key=lambda x: x[0])  # Sort by first character
+                st.write(" ".join(sorted_compounds))
 
 min_strokes, max_strokes = st.session_state.stroke_range
 component_map = build_component_map(max_depth=st.session_state.max_depth)
@@ -187,10 +238,10 @@ if st.session_state.selected_comp:
             # Filter compounds based on display mode
             if st.session_state.display_mode == "2-Character Phrases":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 2]
+            elif st.session_state.display_mode == "3-Character Phrases":
+                filtered_compounds = [comp for comp in compounds if len(comp) == 3]
             elif st.session_state.display_mode == "4-Character Idioms":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 4]
-            else:  # All Other Compounds
-                filtered_compounds = [comp for comp in compounds if len(comp) not in (2, 4)]
 
             # Only include the character if it has compounds that match the filter
             if filtered_compounds:
