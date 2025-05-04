@@ -169,16 +169,35 @@ if st.session_state.selected_comp:
         c for c in component_map.get(st.session_state.selected_comp, [])
         if min_strokes <= get_stroke_count(c) <= max_strokes
     ]
-    
-    # Filter characters based on display mode
-    if st.session_state.display_mode != "Minimalist":
-        # For compound-based modes, only include characters with compounds
-        chars = [
-            c for c in chars
-            if char_decomp.get(c, {}).get("compounds", [])
-        ]
-    
-    chars = sorted(set(chars), key=get_stroke_count)
+
+    # Prepare filtered characters and their compounds based on display mode
+    filtered_chars = []
+    char_compounds = {}
+
+    for c in chars:
+        entry = char_decomp.get(c, {})
+        compounds = entry.get("compounds", []) or []
+        if not compounds:
+            continue  # Skip characters with no compounds for all modes
+
+        if st.session_state.display_mode == "Minimalist":
+            filtered_chars.append(c)
+            char_compounds[c] = []
+        else:
+            # Filter compounds based on display mode
+            if st.session_state.display_mode == "2-Character Phrases":
+                filtered_compounds = [comp for comp in compounds if len(comp) == 2]
+            elif st.session_state.display_mode == "4-Character Idioms":
+                filtered_compounds = [comp for comp in compounds if len(comp) == 4]
+            else:  # All Other Compounds
+                filtered_compounds = [comp for comp in compounds if len(comp) not in (2, 4)]
+
+            # Only include the character if it has compounds that match the filter
+            if filtered_compounds:
+                filtered_chars.append(c)
+                char_compounds[c] = filtered_compounds
+
+    chars = sorted(set(filtered_chars), key=get_stroke_count)
 
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
@@ -201,17 +220,8 @@ if st.session_state.selected_comp:
         st.write(f"**{c}** — {pinyin} — {definition} ({stroke_text})")
 
         if st.session_state.display_mode != "Minimalist":
-            compounds = entry.get("compounds", [])
-            if compounds:
-                # Filter compounds based on display mode
-                if st.session_state.display_mode == "2-Character Phrases":
-                    filtered_compounds = [comp for comp in compounds if len(comp) == 2]
-                elif st.session_state.display_mode == "4-Character Idioms":
-                    filtered_compounds = [comp for comp in compounds if len(comp) == 4]
-                else:  # All Other Compounds
-                    filtered_compounds = [comp for comp in compounds if len(comp) not in (2, 4)]
-                
-                if filtered_compounds:
-                    st.markdown(f"**{st.session_state.display_mode} for {c}:**")
-                    sorted_compounds = sorted(filtered_compounds, key=len)
-                    st.write(" ".join(sorted_compounds))
+            filtered_compounds = char_compounds.get(c, [])
+            if filtered_compounds:  # Redundant check for clarity
+                st.markdown(f"**{st.session_state.display_mode} for {c}:**")
+                sorted_compounds = sorted(filtered_compounds, key=len)
+                st.write(" ".join(sorted_compounds))
