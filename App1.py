@@ -223,5 +223,5 @@ if st.session_state.selected_comp:
             filtered_compounds = char_compounds.get(c, [])
             if filtered_compounds:  # Redundant check for clarity
                 st.markdown(f"**{st.session_state.display_mode} for {c}:**")
-                sorted_compounds = sorted(filtered_compounds, key=len)
+                sorted_compounds = sorted(filtered_compounds, key=lambda x: x[0])  # Sort by first character
                 st.write(" ".join(sorted_compounds))
