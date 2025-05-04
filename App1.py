@@ -115,7 +115,7 @@ st.radio(
         "Minimalist: Shows character, pinyin, definition, and strokes. "
         "2-Character Phrases: Shows characters with 2-character compound words. "
         "3-Character Phrases: Shows characters with 3-character compound words. "
-        "4-Character Phrases: Shows characters with 4-character compound words."
+        "4-Character Idioms: Shows characters with 4-character compound words."
     )
 )
 
@@ -189,7 +189,7 @@ if st.session_state.selected_comp:
                 filtered_compounds = [comp for comp in compounds if len(comp) == 2]
             elif st.session_state.display_mode == "3-Character Phrases":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 3]
-            elif st.session_state.display_mode == "4-Character Phrases":
+            elif st.session_state.display_mode == "4-Character Idioms":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 4]
 
             # Only include the character if it has compounds that match the filter
