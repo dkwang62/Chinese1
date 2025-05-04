@@ -18,7 +18,86 @@ if "stroke_range" not in st.session_state:
 if "display_mode" not in st.session_state:
     st.session_state.display_mode = "Minimalist"
 
-# Rest of your existing code for loading char_decomp, get_all_components, build_component_map, etc. remains unchanged...
+# === Step 1: Load strokes1.json from local file (cached) ===
+@st.cache_data
+def load_char_decomp():
+    try:
+        with open("strokes1.json", "r", encoding="utf-8") as f:
+            entries = json.load(f)
+            return {entry["character"]: entry for entry in entries}
+    except FileNotFoundError:
+        st.error("Error: strokes1.json file not found.")
+        return {}
+    except json.JSONDecodeError:
+        st.error("Error: strokes1.json is malformed or invalid JSON.")
+        return {}
+
+char_decomp = load_char_decomp()
+
+# === Step 2: Recursive decomposition === (unchanged)
+def get_all_components(char, max_depth=5, depth=0, seen=None):
+    if seen is None:
+        seen = set()
+    if char in seen or depth > max_depth:
+        return set()
+    seen.add(char)
+    components = set()
+    decomposition = char_decomp.get(char, {}).get("decomposition", "")
+    if not decomposition:
+        return components
+    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+    i = 0
+    while i < len(decomposition):
+        comp = decomposition[i]
+        if comp in idc_chars:
+            i += 1
+            continue
+        if ('一' <= comp <= '鿿' or '\u2E80' <= comp <= '\u2EFF' or
+            '\u3400' <= comp <= '\u4DBF' or '\U00020000' <= comp <= '\U0002A6DF'):
+            components.add(comp)
+            branch_seen = seen.copy()
+            components.update(get_all_components(comp, max_depth, depth + 1, branch_seen))
+        i += 1
+    return components
+
+# === Step 3: Build component map (cached) ===
+@st.cache_data
+def build_component_map(max_depth):
+    component_map = defaultdict(list)
+    char_to_components = defaultdict(set)
+    radical_variants = {'⺌': '小', '小': '⺌'}
+    for char in char_decomp:
+        decomposition = char_decomp.get(char, {}).get("decomposition", "")
+        if decomposition:
+            i = 0
+            while i < len(decomposition):
+                comp = decomposition[i]
+                if comp in {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}:
+                    i += 1
+                    continue
+                if ('一' <= comp <= '鿿' or '\u2E80' <= comp <= '\u2EFF' or
+                    '\u3400' <= comp <= '\u4DBF' or '\U00020000' <= comp <= '\U0002A6DF'):
+                    char_to_components[char].add(comp)
+                    sub_components = get_all_components(comp, max_depth=max_depth)
+                    char_to_components[char].update(sub_components)
+                i += 1
+        char_to_components[char].add(char)
+    direct_components = defaultdict(set)
+    for char, components in char_to_components.items():
+        for comp in components:
+            direct_components[comp].add(char)
+    for comp, chars in direct_components.items():
+        component_map[comp].extend(chars)
+        if comp in radical_variants:
+            variant = radical_variants[comp]
+            if variant not in component_map:
+                component_map[variant] = []
+    expected_chars = ['光', '嗩', '尚', '当']
+    for comp in ['⺌', '小']:
+        for char in expected_chars:
+            if char not in component_map[comp]:
+                component_map[comp].append(char)
+    return component_map
 
 # === Step 4: Controls ===
 col1, col2 = st.columns(2)
