@@ -123,7 +123,7 @@ st.radio(
     "Display Mode:",
     options=["Minimalist", "Expanded"],
     key="display_mode",
-    help="Minimalist: Shows character, pinyin, definition, and strokes. Expanded: Adds compound words."
+    help="Minimalist: Shows character, pinyin, definition, and strokes. Expanded: Shows only characters with compound words, including compounds."
 )
 
 min_strokes, max_strokes = st.session_state.stroke_range
@@ -171,10 +171,19 @@ with col_b:
 
 # === Display current selection and decomposed characters ===
 if st.session_state.selected_comp:
+    # Base character list for Minimalist mode
     chars = [
         c for c in component_map.get(st.session_state.selected_comp, [])
         if min_strokes <= get_stroke_count(c) <= max_strokes
     ]
+    
+    # Filter for Expanded mode to include only characters with compounds
+    if st.session_state.display_mode == "Expanded":
+        chars = [
+            c for c in chars
+            if char_decomp.get(c, {}).get("compounds", [])
+        ]
+    
     chars = sorted(set(chars), key=get_stroke_count)
 
     st.markdown(f"""
@@ -199,7 +208,7 @@ if st.session_state.selected_comp:
 
         if st.session_state.display_mode == "Expanded":
             compounds = entry.get("compounds", [])
-            if compounds:
+            if compounds:  # Redundant check, as chars already filtered, but kept for clarity
                 st.markdown(f"**Compound Words for {c}:**")
                 sorted_compounds = sorted(compounds, key=len)
                 st.write(" ".join(sorted_compounds))
