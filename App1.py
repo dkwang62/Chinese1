@@ -1,3 +1,88 @@
+import json
+from collections import defaultdict
+import streamlit as st
+
+st.set_page_config(layout="wide")
+
+st.markdown("""
+<h1 style='font-size: 1.8em;'>🧩 Character Decomposition Explorer</h1>
+""", unsafe_allow_html=True)
+
+# Initialize session state at the top
+if "selected_comp" not in st.session_state:
+    st.session_state.selected_comp = "⺌"
+if "max_depth" not in st.session_state:
+    st.session_state.max_depth = 0
+if "stroke_range" not in st.session_state:
+    st.session_state.stroke_range = (3, 14)
+if "display_mode" not in st.session_state:
+    st.session_state.display_mode = "Minimalist"
+
+# Rest of your existing code for loading char_decomp, get_all_components, build_component_map, etc. remains unchanged...
+
+# === Step 4: Controls ===
+col1, col2 = st.columns(2)
+with col1:
+    st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
+with col2:
+    st.slider("Strokes Range", 0, 30, key="stroke_range")
+
+# Add display mode selection
+st.radio(
+    "Display Mode:",
+    options=["Minimalist", "2-Character Phrases", "4-Character Idioms", "All Other Compounds"],
+    key="display_mode",
+    help=(
+        "Minimalist: Shows character, pinyin, definition, and strokes. "
+        "2-Character Phrases: Shows characters with 2-character compound words. "
+        "4-Character Idioms: Shows characters with 4-character compound words. "
+        "All Other Compounds: Shows characters with compound words of other lengths."
+    )
+)
+
+min_strokes, max_strokes = st.session_state.stroke_range
+component_map = build_component_map(max_depth=st.session_state.max_depth)
+
+# === Helper: Get stroke count === (unchanged)
+def get_stroke_count(char):
+    strokes = char_decomp.get(char, {}).get("strokes", None)
+    return strokes if strokes is not None else -1
+
+# === Filter dropdown options === (unchanged)
+filtered_components = [
+    comp for comp in component_map
+    if min_strokes <= get_stroke_count(comp) <= max_strokes
+]
+sorted_components = sorted(filtered_components, key=get_stroke_count)
+
+if st.session_state.selected_comp and st.session_state.selected_comp not in sorted_components:
+    sorted_components.insert(0, st.session_state.selected_comp)
+
+# === Component selection === (unchanged)
+def on_text_input_change():
+    text_value = st.session_state.text_input_comp.strip()
+    if text_value and (text_value in component_map or text_value in char_decomp):
+        st.session_state.selected_comp = text_value
+    elif text_value:
+        st.warning("Character not found in component map or dictionary. Please enter a valid character.")
+
+col_a, col_b = st.columns(2)
+with col_a:
+    st.selectbox(
+        "Select a component:",
+        options=sorted_components,
+        format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
+        index=sorted_components.index(st.session_state.selected_comp),
+        key="selected_comp"
+    )
+with col_b:
+    st.text_input(
+        "Or type a component:",
+        value=st.session_state.selected_comp,
+        key="text_input_comp",
+        on_change=on_text_input_change
+    )
+
 # === Display current selection and decomposed characters ===
 if st.session_state.selected_comp:
     # Base character list for Minimalist mode
