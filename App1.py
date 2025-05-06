@@ -5,7 +5,7 @@ import streamlit as st
 # Set page configuration
 st.set_page_config(layout="wide")
 
-# Custom CSS for styling with mobile responsiveness and left-aligned sliders and dropdown
+# Custom CSS for styling with mobile responsiveness and left-aligned elements
 st.markdown("""
 <style>
     .main-header {
@@ -28,6 +28,9 @@ st.markdown("""
         border-radius: 10px;
         margin-bottom: 15px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        max-width: 300px; /* Limit width to prevent excessive stretching */
     }
     .selected-card {
         background-color: #e8f4f8;
@@ -124,6 +127,7 @@ st.markdown("""
         }
         .display-mode-container {
             padding: 8px;
+            max-width: 100%; /* Full width on mobile */
         }
         .selected-card {
             flex-direction: column;
