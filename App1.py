@@ -5,51 +5,51 @@ import streamlit as st
 # Set page configuration
 st.set_page_config(layout="wide")
 
-# Custom CSS for styling with mobile responsiveness and left-aligned elements
+# Custom CSS for styling with minimized spacing and left-aligned elements
 st.markdown("""
 <style>
     .main-header {
         font-size: 2em;
         font-weight: bold;
         color: #2c3e50;
-        margin-bottom: 20px;
+        margin-bottom: 10px; /* Reduced margin */
         text-align: center;
     }
     .controls-container {
         background-color: #f8f9fa;
-        padding: 15px 0 15px 15px; /* Left padding for alignment, no right padding */
-        border-radius: 10px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 10px 0 10px 10px; /* Reduced padding */
+        border-radius: 5px;
+        margin-bottom: 5px; /* Reduced margin */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .display-mode-container {
         background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 5px; /* Reduced padding */
+        border-radius: 5px;
+        margin-bottom: 5px; /* Reduced margin */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         display: flex;
         flex-direction: column;
-        max-width: 300px; /* Limit width to prevent excessive stretching */
+        max-width: 250px; /* Slightly reduced width */
     }
     .selected-card {
         background-color: #e8f4f8;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        padding: 15px; /* Reduced padding */
+        border-radius: 5px;
+        margin-bottom: 10px; /* Reduced margin */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         display: flex;
         align-items: center;
-        gap: 15px;
-        border-left: 5px solid #3498db;
+        gap: 10px; /* Reduced gap */
+        border-left: 4px solid #3498db; /* Reduced border width */
     }
     .selected-char {
-        font-size: 2.5em;
+        font-size: 2em; /* Reduced font size */
         color: #e74c3c;
         margin: 0;
     }
     .selected-details {
-        font-size: 1.1em;
+        font-size: 1em; /* Reduced font size */
         color: #34495e;
         margin: 0;
     }
@@ -57,50 +57,50 @@ st.markdown("""
         color: #2c3e50;
     }
     .results-header {
-        font-size: 1.5em;
+        font-size: 1.3em; /* Reduced font size */
         color: #2c3e50;
-        margin-top: 20px;
-        margin-bottom: 10px;
+        margin-top: 10px; /* Reduced margin */
+        margin-bottom: 5px; /* Reduced margin */
     }
     .char-card {
         background-color: #ffffff;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 10px; /* Reduced padding */
+        border-radius: 5px;
+        margin-bottom: 5px; /* Reduced margin */
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Reduced shadow */
         transition: transform 0.2s;
     }
     .char-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Reduced shadow */
     }
     .char-title {
-        font-size: 1.4em;
+        font-size: 1.2em; /* Reduced font size */
         color: #e74c3c;
         margin: 0;
         display: inline;
     }
     .char-details {
-        font-size: 1em;
+        font-size: 0.9em; /* Reduced font size */
         color: #34495e;
-        margin: 5px 0;
+        margin: 3px 0; /* Reduced margin */
     }
     .char-details strong {
         color: #2c3e50;
     }
     .compounds-section {
         background-color: #f1f8e9;
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 10px;
+        padding: 5px; /* Reduced padding */
+        border-radius: 3px;
+        margin-top: 5px; /* Reduced margin */
     }
     .compounds-title {
-        font-size: 1.1em;
+        font-size: 1em; /* Reduced font size */
         color: #558b2f;
-        margin: 0 0 5px 0;
+        margin: 0 0 3px 0; /* Reduced margin */
     }
     .compounds-list {
-        font-size: 1em;
+        font-size: 0.9em; /* Reduced font size */
         color: #34495e;
         margin: 0;
     }
@@ -110,8 +110,8 @@ st.markdown("""
         padding-left: 0 !important;
         margin-left: 0 !important;
     }
-    /* Left-align dropdown on desktop/laptop */
-    .stSelectbox {
+    /* Left-align dropdown on desktop/laptop with higher specificity */
+    .stSelectbox div[data-baseweb="select"] {
         text-align: left !important;
         padding-left: 0 !important;
         margin-left: 0 !important;
@@ -120,53 +120,52 @@ st.markdown("""
     @media (max-width: 768px) {
         .main-header {
             font-size: 1.5em;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         .controls-container {
-            padding: 10px;
+            padding: 8px;
         }
         .display-mode-container {
-            padding: 8px;
-            max-width: 100%; /* Full width on mobile */
+            padding: 5px;
+            max-width: 100%;
         }
         .selected-card {
             flex-direction: column;
             align-items: flex-start;
-            padding: 15px;
-        }
-        .selected-char {
-            font-size: 2em;
-        }
-        .selected-details {
-            font-size: 0.95em;
-            line-height: 1.5;
-        }
-        .results-header {
-            font-size: 1.3em;
-        }
-        .char-card {
             padding: 10px;
         }
-        .char-title {
+        .selected-char {
+            font-size: 1.5em;
+        }
+        .selected-details {
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .results-header {
             font-size: 1.2em;
         }
+        .char-card {
+            padding: 8px;
+        }
+        .char-title {
+            font-size: 1.1em;
+        }
         .char-details {
-            font-size: 0.9em;
-            line-height: 1.5;
+            font-size: 0.8em;
+            line-height: 1.4;
         }
         .compounds-title {
-            font-size: 1em;
-        }
-        .compounds-list {
             font-size: 0.9em;
         }
-        /* Stack columns vertically on mobile */
+        .compounds-list {
+            font-size: 0.8em;
+        }
         .stColumn {
             display: block !important;
             width: 100% !important;
         }
         .stColumn > div {
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
     }
 </style>
@@ -296,12 +295,12 @@ if st.session_state.selected_comp and st.session_state.selected_comp not in sort
 # === Step 4: Controls ===
 with st.container():
     st.markdown("<div class='controls-container'>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns([1, 1], gap="small")  # Reduced gap between columns
     with col1:
         st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
     with col2:
         st.slider("Strokes Range", 0, 30, key="stroke_range")
-        col_a, col_b = st.columns([1, 1])
+        col_a, col_b = st.columns([1, 1], gap="small")  # Reduced gap between columns
         with col_a:
             st.selectbox(
                 "Select a component:",
@@ -349,11 +348,8 @@ if st.session_state.selected_comp:
     for c in chars:
         entry = char_decomp.get(c, {})
         compounds = entry.get("compounds", []) or []
-        if not compounds:
-            continue  # Skip characters with no compounds for all modes
-
         if st.session_state.display_mode == "Single Character":
-            filtered_chars.append(c)
+            filtered_chars.append(c)  # Include character regardless of compounds
             char_compounds[c] = []
         else:
             filtered_compounds = []  # Initialize filtered_compounds
