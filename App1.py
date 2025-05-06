@@ -2,11 +2,103 @@ import json
 from collections import defaultdict
 import streamlit as st
 
+# Set page configuration
 st.set_page_config(layout="wide")
 
+# Custom CSS for styling
 st.markdown("""
-<h1 style='font-size: 1.8em;'>🧩 Character Decomposition Explorer</h1>
+<style>
+    .main-header {
+        font-size: 2em;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .controls-container {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .selected-card {
+        background-color: #e8f4f8;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-left: 5px solid #3498db;
+    }
+    .selected-char {
+        font-size: 2.5em;
+        color: #e74c3c;
+        margin: 0;
+    }
+    .selected-details {
+        font-size: 1.1em;
+        color: #34495e;
+        margin: 0;
+    }
+    .selected-details strong {
+        color: #2c3e50;
+    }
+    .results-header {
+        font-size: 1.5em;
+        color: #2c3e50;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+    .char-card {
+        background-color: #ffffff;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .char-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    .char-title {
+        font-size: 1.4em;
+        color: #e74c3c;
+        margin: 0;
+        display: inline;
+    }
+    .char-details {
+        font-size: 1em;
+        color: #34495e;
+        margin: 5px 0;
+    }
+    .char-details strong {
+        color: #2c3e50;
+    }
+    .compounds-section {
+        background-color: #f1f8e9;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    .compounds-title {
+        font-size: 1.1em;
+        color: #558b2f;
+        margin: 0 0 5px 0;
+    }
+    .compounds-list {
+        font-size: 1em;
+        color: #34495e;
+        margin: 0;
+    }
+</style>
 """, unsafe_allow_html=True)
+
+# Display the main header
+st.markdown("<h1 class='main-header'>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
 
 # Initialize session state at the top
 if "selected_comp" not in st.session_state:
@@ -100,24 +192,41 @@ def build_component_map(max_depth):
     return component_map
 
 # === Step 4: Controls ===
-col1, col2 = st.columns(2)
-with col1:
-    st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
-with col2:
-    st.slider("Strokes Range", 0, 30, key="stroke_range")
-
-# Add display mode selection
-st.radio(
-    "Display Mode:",
-    options=["Minimalist", "2-Character Phrases", "3-Character Phrases", "4-Character Idioms"],
-    key="display_mode",
-    help=(
-        "Minimalist: Shows character, pinyin, definition, and strokes. "
-        "2-Character Phrases: Shows characters with 2-character compound words. "
-        "3-Character Phrases: Shows characters with 3-character compound words. "
-        "4-Character Idioms: Shows characters with 4-character compound words."
-    )
-)
+with st.container():
+    st.markdown("<div class='controls-container'>", unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
+        st.radio(
+            "Display Mode:",
+            options=["Minimalist", "2-Character Phrases", "3-Character Phrases", "4-Character Idioms"],
+            key="display_mode",
+            help=(
+                "Minimalist: Shows character, pinyin, definition, and strokes. "
+                "2-Character Phrases: Shows characters with 2-character compound words. "
+                "3-Character Phrases: Shows characters with 3-character compound words. "
+                "4-Character Idioms: Shows characters with 4-character compound words."
+            )
+        )
+    with col2:
+        st.slider("Strokes Range", 0, 30, key="stroke_range")
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.selectbox(
+                "Select a component:",
+                options=sorted_components,
+                format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
+                index=sorted_components.index(st.session_state.selected_comp) if st.session_state.selected_comp in sorted_components else 0,
+                key="selected_comp"
+            )
+        with col_b:
+            st.text_input(
+                "Or type a component:",
+                value=st.session_state.selected_comp,
+                key="text_input_comp",
+                on_change=on_text_input_change
+            )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 min_strokes, max_strokes = st.session_state.stroke_range
 component_map = build_component_map(max_depth=st.session_state.max_depth)
@@ -144,23 +253,6 @@ def on_text_input_change():
         st.session_state.selected_comp = text_value
     elif text_value:
         st.warning("Character not found in component map or dictionary. Please enter a valid character.")
-
-col_a, col_b = st.columns(2)
-with col_a:
-    st.selectbox(
-        "Select a component:",
-        options=sorted_components,
-        format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
-        index=sorted_components.index(st.session_state.selected_comp),
-        key="selected_comp"
-    )
-with col_b:
-    st.text_input(
-        "Or type a component:",
-        value=st.session_state.selected_comp,
-        key="text_input_comp",
-        on_change=on_text_input_change
-    )
 
 # === Helper: Clean field display ===
 def clean_field(field):
@@ -216,18 +308,22 @@ if st.session_state.selected_comp:
 
     # Display selected component with cleaned fields
     st.markdown(f"""
-    <div style='display: flex; align-items: center; gap: 20px;'>
-        <h2 style='font-size: 1.2em; margin: 0;'>🧬 Characters with: <span style='font-size: 2.4em;'>{st.session_state.selected_comp}</span> — {len(chars)} result(s)</h2>
-        <p style='font-size: 1.2em; margin: 0;'>
-            <strong></strong> {selected_pinyin}   
-            <strong></strong> {selected_definition}   
-            <strong>Radical:</strong> {selected_radical}   
-            <strong>Hint:</strong> {selected_hint}   
-            {selected_stroke_text} 
+    <div class='selected-card'>
+        <h2 class='selected-char'>{st.session_state.selected_comp}</h2>
+        <p class='selected-details'>
+            <strong>Pinyin:</strong> {selected_pinyin} &nbsp;&nbsp;
+            <strong>Definition:</strong> {selected_definition} &nbsp;&nbsp;
+            <strong>Radical:</strong> {selected_radical} &nbsp;&nbsp;
+            <strong>Hint:</strong> {selected_hint} &nbsp;&nbsp;
+            <strong>Strokes:</strong> {selected_stroke_text} &nbsp;&nbsp;
+            <strong>Depth:</strong> {st.session_state.max_depth} &nbsp;&nbsp;
+            <strong>Stroke Range:</strong> {min_strokes} – {max_strokes}
         </p>
-            </div>
+    </div>
+    <h2 class='results-header'>🧬 Characters with {st.session_state.selected_comp} — {len(chars)} result(s)</h2>
     """, unsafe_allow_html=True)
 
+    # Display decomposed characters
     for c in chars:
         entry = char_decomp.get(c, {})
         pinyin = clean_field(entry.get("pinyin", "—"))
@@ -236,11 +332,31 @@ if st.session_state.selected_comp:
         hint = clean_field(entry.get("etymology", {}).get("hint", "No hint available"))
         stroke_count = get_stroke_count(c)
         stroke_text = f"{stroke_count} strokes" if stroke_count != -1 else "unknown strokes"
-        st.write(f"**{c}** — {pinyin} — {definition} — Radical: {radical} — Hint: {hint} ({stroke_text})")
 
+        # Display character card
+        st.markdown(f"""
+        <div class='char-card'>
+            <h3 class='char-title'>{c}</h3>
+            <p class='char-details'>
+                <strong>Pinyin:</strong> {pinyin} &nbsp;&nbsp;
+                <strong>Definition:</strong> {definition} &nbsp;&nbsp;
+                <strong>Radical:</strong> {radical} &nbsp;&nbsp;
+                <strong>Hint:</strong> {hint} &nbsp;&nbsp;
+                <strong>Strokes:</strong> {stroke_text}
+            </p>
+        """, unsafe_allow_html=True)
+
+        # Display compounds if not in Minimalist mode
         if st.session_state.display_mode != "Minimalist":
             filtered_compounds = char_compounds.get(c, [])
-            if filtered_compounds:  # Redundant check for clarity
-                st.markdown(f"**{st.session_state.display_mode} for {c}:**")
-                sorted_compounds = sorted(filtered_compounds, key=lambda x: x[0])  # Sort by first character
-                st.write(" ".join(sorted_compounds))
+            if filtered_compounds:
+                sorted_compounds = sorted(filtered_compounds, key=lambda x: x[0])
+                compounds_text = " ".join(sorted_compounds)
+                st.markdown(f"""
+                <div class='compounds-section'>
+                    <p class='compounds-title'>{st.session_state.display_mode} for {c}:</p>
+                    <p class='compounds-list'>{compounds_text}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
