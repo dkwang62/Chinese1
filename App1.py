@@ -191,6 +191,25 @@ def build_component_map(max_depth):
                 component_map[comp].append(char)
     return component_map
 
+# === Helper: Get stroke count ===
+def get_stroke_count(char):
+    strokes = char_decomp.get(char, {}).get("strokes", None)
+    return strokes if strokes is not None else -1
+
+# Compute component_map and sorted_components before controls
+min_strokes, max_strokes = st.session_state.stroke_range
+component_map = build_component_map(max_depth=st.session_state.max_depth)
+
+# Filter dropdown options
+filtered_components = [
+    comp for comp in component_map
+    if min_strokes <= get_stroke_count(comp) <= max_strokes
+]
+sorted_components = sorted(filtered_components, key=get_stroke_count)
+
+if st.session_state.selected_comp and st.session_state.selected_comp not in sorted_components:
+    sorted_components.insert(0, st.session_state.selected_comp)
+
 # === Step 4: Controls ===
 with st.container():
     st.markdown("<div class='controls-container'>", unsafe_allow_html=True)
@@ -227,24 +246,6 @@ with st.container():
                 on_change=on_text_input_change
             )
     st.markdown("</div>", unsafe_allow_html=True)
-
-min_strokes, max_strokes = st.session_state.stroke_range
-component_map = build_component_map(max_depth=st.session_state.max_depth)
-
-# === Helper: Get stroke count ===
-def get_stroke_count(char):
-    strokes = char_decomp.get(char, {}).get("strokes", None)
-    return strokes if strokes is not None else -1
-
-# === Filter dropdown options ===
-filtered_components = [
-    comp for comp in component_map
-    if min_strokes <= get_stroke_count(comp) <= max_strokes
-]
-sorted_components = sorted(filtered_components, key=get_stroke_count)
-
-if st.session_state.selected_comp and st.session_state.selected_comp not in sorted_components:
-    sorted_components.insert(0, st.session_state.selected_comp)
 
 # === Component selection ===
 def on_text_input_change():
@@ -311,12 +312,12 @@ if st.session_state.selected_comp:
     <div class='selected-card'>
         <h2 class='selected-char'>{st.session_state.selected_comp}</h2>
         <p class='selected-details'>
-            <strong>Pinyin:</strong> {selected_pinyin} &nbsp;&nbsp;
-            <strong>Definition:</strong> {selected_definition} &nbsp;&nbsp;
-            <strong>Radical:</strong> {selected_radical} &nbsp;&nbsp;
-            <strong>Hint:</strong> {selected_hint} &nbsp;&nbsp;
-            <strong>Strokes:</strong> {selected_stroke_text} &nbsp;&nbsp;
-            <strong>Depth:</strong> {st.session_state.max_depth} &nbsp;&nbsp;
+            <strong>Pinyin:</strong> {selected_pinyin}   
+            <strong>Definition:</strong> {selected_definition}   
+            <strong>Radical:</strong> {selected_radical}   
+            <strong>Hint:</strong> {selected_hint}   
+            <strong>Strokes:</strong> {selected_stroke_text}   
+            <strong>Depth:</strong> {st.session_state.max_depth}   
             <strong>Stroke Range:</strong> {min_strokes} – {max_strokes}
         </p>
     </div>
@@ -338,10 +339,10 @@ if st.session_state.selected_comp:
         <div class='char-card'>
             <h3 class='char-title'>{c}</h3>
             <p class='char-details'>
-                <strong>Pinyin:</strong> {pinyin} &nbsp;&nbsp;
-                <strong>Definition:</strong> {definition} &nbsp;&nbsp;
-                <strong>Radical:</strong> {radical} &nbsp;&nbsp;
-                <strong>Hint:</strong> {hint} &nbsp;&nbsp;
+                <strong>Pinyin:</strong> {pinyin}   
+                <strong>Definition:</strong> {definition}   
+                <strong>Radical:</strong> {radical}   
+                <strong>Hint:</strong> {hint}   
                 <strong>Strokes:</strong> {stroke_text}
             </p>
         """, unsafe_allow_html=True)
