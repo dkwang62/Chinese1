@@ -5,54 +5,27 @@ import streamlit as st
 # Set page configuration
 st.set_page_config(layout="wide")
 
-# Custom CSS for styling with minimized spacing and corrected alignment
+# Custom CSS for styling the output section only
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 2em;
-        font-weight: bold;
-        color: #2c3e50;
-        margin-bottom: 5px;
-        text-align: center;
-    }
-    .controls-container {
-        background-color: #f8f9fa;
-        padding: 5px 0 5px 5px;
-        border-radius: 5px;
-        margin-bottom: 0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0;
-    }
-    .display-mode-container {
-        background-color: #f8f9fa;
-        padding: 5px;
-        border-radius: 5px;
-        margin-bottom: 0;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        max-width: 250px;
-    }
     .selected-card {
         background-color: #e8f4f8;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 5px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         display: flex;
         align-items: center;
-        gap: 5px;
-        border-left: 3px solid #3498db;
+        gap: 15px;
+        border-left: 5px solid #3498db;
     }
     .selected-char {
-        font-size: 1.8em;
+        font-size: 2.5em;
         color: #e74c3c;
         margin: 0;
     }
     .selected-details {
-        font-size: 0.9em;
+        font-size: 1.1em;
         color: #34495e;
         margin: 0;
     }
@@ -60,127 +33,85 @@ st.markdown("""
         color: #2c3e50;
     }
     .results-header {
-        font-size: 1.2em;
+        font-size: 1.5em;
         color: #2c3e50;
-        margin-top: 5px;
-        margin-bottom: 0;
+        margin-top: 20px;
+        margin-bottom: 10px;
     }
     .char-card {
         background-color: #ffffff;
-        padding: 8px;
-        border-radius: 5px;
-        margin-bottom: 2px;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         transition: transform 0.2s;
     }
     .char-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
     }
     .char-title {
-        font-size: 1.1em;
+        font-size: 1.4em;
         color: #e74c3c;
         margin: 0;
         display: inline;
     }
     .char-details {
-        font-size: 0.8em;
+        font-size: 1em;
         color: #34495e;
-        margin: 2px 0;
+        margin: 5px 0;
     }
     .char-details strong {
         color: #2c3e50;
     }
     .compounds-section {
         background-color: #f1f8e9;
-        padding: 3px;
-        border-radius: 3px;
-        margin-top: 3px;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
     }
     .compounds-title {
-        font-size: 0.9em;
+        font-size: 1.1em;
         color: #558b2f;
-        margin: 0 0 2px 0;
+        margin: 0 0 5px 0;
     }
     .compounds-list {
-        font-size: 0.8em;
+        font-size: 1em;
         color: #34495e;
         margin: 0;
     }
-    /* Left-align sliders */
-    .stSlider {
-        text-align: left !important;
-        padding-left: 0 !important;
-        margin-left: 0 !important;
-    }
-    /* Left-align dropdown with precise selector */
-    .stSelectbox div[role="combobox"] {
-        text-align: left !important;
-        padding-left: 0 !important;
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
-    /* Remove extra spacing in containers and columns */
-    .stContainer {
-        padding: 0 !important;
-    }
-    .stColumn {
-        padding: 0 !important;
-        margin: 0 !important;
-        display: flex;
-        flex-direction: column;
-        gap: 0 !important;
-    }
-    .stColumn > div {
-        margin-bottom: 0 !important;
-    }
-    /* Mobile responsiveness */
+    /* Mobile responsiveness for output section */
     @media (max-width: 768px) {
-        .main-header {
-            font-size: 1.5em;
-            margin-bottom: 5px;
-        }
-        .controls-container {
-            padding: 5px;
-            flex-direction: column;
-        }
-        .display-mode-container {
-            padding: 5px;
-            max-width: 100%;
-        }
         .selected-card {
             flex-direction: column;
             align-items: flex-start;
-            padding: 8px;
+            padding: 10px;
         }
         .selected-char {
-            font-size: 1.5em;
+            font-size: 2em;
         }
         .selected-details {
-            font-size: 0.8em;
-            line-height: 1.3;
+            font-size: 0.95em;
+            line-height: 1.5;
         }
         .results-header {
-            font-size: 1.1em;
+            font-size: 1.3em;
         }
         .char-card {
-            padding: 6px;
+            padding: 10px;
         }
         .char-title {
-            font-size: 1em;
+            font-size: 1.2em;
         }
         .char-details {
-            font-size: 0.7em;
-            line-height: 1.3;
+            font-size: 0.9em;
+            line-height: 1.5;
         }
         .compounds-title {
-            font-size: 0.8em;
+            font-size: 1em;
         }
         .compounds-list {
-            font-size: 0.7em;
-        }
-        .stColumn {
-            width: 100% !important;
+            font-size: 0.9em;
         }
     }
 </style>
@@ -307,31 +238,36 @@ sorted_components = sorted(filtered_components, key=get_stroke_count)
 if st.session_state.selected_comp and st.session_state.selected_comp not in sorted_components:
     sorted_components.insert(0, st.session_state.selected_comp)
 
-# === Step 4: Controls ===
-with st.container():
-    st.markdown("<div class='controls-container'>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1], gap="small")
-    with col1:
-        st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
-    with col2:
-        st.slider("Strokes Range", 0, 30, key="stroke_range")
-        col_a, col_b = st.columns([1, 1], gap="small")
-        with col_a:
-            st.selectbox(
-                "Select a component:",
-                options=sorted_components,
-                format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
-                index=sorted_components.index(st.session_state.selected_comp) if st.session_state.selected_comp in sorted_components else 0,
-                key="selected_comp"
-            )
-        with col_b:
-            st.text_input(
-                "Or type a component:",
-                value=st.session_state.selected_comp,
-                key="text_input_comp",
-                on_change=on_text_input_change
-            )
-    st.markdown("</div>", unsafe_allow_html=True)
+# === Step 4: Controls (unformatted) ===
+st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
+st.slider("Strokes Range", 0, 30, key="stroke_range")
+col1, col2 = st.columns(2)
+with col1:
+    st.selectbox(
+        "Select a component:",
+        options=sorted_components,
+        format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
+        index=sorted_components.index(st.session_state.selected_comp) if st.session_state.selected_comp in sorted_components else 0,
+        key="selected_comp"
+    )
+with col2:
+    st.text_input(
+        "Or type a component:",
+        value=st.session_state.selected_comp,
+        key="text_input_comp",
+        on_change=on_text_input_change
+    )
+st.radio(
+    "Display Mode:",
+    options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
+    key="display_mode",
+    help=(
+        "Single Character: Shows character, pinyin, definition, and strokes. "
+        "2-Character Phrases: Shows characters with 2-character compound words. "
+        "3-Character Phrases: Shows characters with 3-character compound words. "
+        "4-Character Phrases: Shows characters with 4-character compound words."
+    )
+)
 
 # === Helper: Clean field display ===
 def clean_field(field):
@@ -379,22 +315,6 @@ if st.session_state.selected_comp:
                 char_compounds[c] = filtered_compounds
 
     chars = sorted(set(filtered_chars), key=get_stroke_count)
-
-    # Display Mode selection just before the output
-    with st.container():
-        st.markdown("<div class='display-mode-container'>", unsafe_allow_html=True)
-        st.radio(
-            "Display Mode:",
-            options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
-            key="display_mode",
-            help=(
-                "Single Character: Shows character, pinyin, definition, and strokes. "
-                "2-Character Phrases: Shows characters with 2-character compound words. "
-                "3-Character Phrases: Shows characters with 3-character compound words. "
-                "4-Character Phrases: Shows characters with 4-character compound words."
-            )
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # Display selected component with cleaned fields
     st.markdown(f"""
