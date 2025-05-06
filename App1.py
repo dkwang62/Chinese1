@@ -52,7 +52,7 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
         if comp in idc_chars:
             i += 1
             continue
-        if ('一' <= comp <= Henry's' or '\u2E80' <= comp <= '\u2EFF' or
+        if ('一' <= comp <= '鿿' or '\u2E80' <= comp <= '\u2EFF' or
             '\u3400' <= comp <= '\u4DBF' or '\U00020000' <= comp <= '\U0002A6DF'):
             components.add(comp)
             branch_seen = seen.copy()
@@ -212,10 +212,10 @@ if st.session_state.selected_comp:
         <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
         <span style='font-size: 2.4em;'>{st.session_state.selected_comp}</span>
         <p style='margin: 0;'>
-            <strong>Pinyin:</strong> {selected_pinyin} &nbsp;&nbsp;
-            <strong>Definition:</strong> {selected_definition} &nbsp;&nbsp;
-            <strong>Strokes:</strong> {selected_stroke_text} &nbsp;&nbsp;
-            <strong>Depth:</strong> {st.session_state.max_depth} &nbsp;&nbsp;
+            <strong>Pinyin:</strong> {selected_pinyin}   
+            <strong>Definition:</strong> {selected_definition}   
+            <strong>Strokes:</strong> {selected_stroke_text}   
+            <strong>Depth:</strong> {st.session_state.max_depth}   
             <strong>Stroke Range:</strong> {min_strokes} – {max_strokes}
         </p>
         <h2 style='font-size: 1.2em; margin: 0;'>🧬 Characters with: {st.session_state.selected_comp} — {len(chars)} result(s)</h2>
