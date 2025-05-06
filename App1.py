@@ -22,6 +22,13 @@ st.markdown("""
         margin-bottom: 20px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
+    .display-mode-container {
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
     .selected-card {
         background-color: #e8f4f8;
         padding: 20px;
@@ -102,6 +109,9 @@ st.markdown("""
         }
         .controls-container {
             padding: 10px;
+        }
+        .display-mode-container {
+            padding: 8px;
         }
         .selected-card {
             flex-direction: column;
@@ -273,17 +283,6 @@ with st.container():
     col1, col2 = st.columns([1, 1])
     with col1:
         st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
-        st.radio(
-            "Display Mode:",
-            options=["Minimalist", "2-Character Phrases", "3-Character Phrases", "4-Character Idioms"],
-            key="display_mode",
-            help=(
-                "Minimalist: Shows character, pinyin, definition, and strokes. "
-                "2-Character Phrases: Shows characters with 2-character compound words. "
-                "3-Character Phrases: Shows characters with 3-character compound words. "
-                "4-Character Idioms: Shows characters with 4-character compound words."
-            )
-        )
     with col2:
         st.slider("Strokes Range", 0, 30, key="stroke_range")
         col_a, col_b = st.columns([1, 1])
@@ -355,6 +354,22 @@ if st.session_state.selected_comp:
                 char_compounds[c] = filtered_compounds
 
     chars = sorted(set(filtered_chars), key=get_stroke_count)
+
+    # Display Mode selection just before the output
+    with st.container():
+        st.markdown("<div class='display-mode-container'>", unsafe_allow_html=True)
+        st.radio(
+            "Display Mode:",
+            options=["Minimalist", "2-Character Phrases", "3-Character Phrases", "4-Character Idioms"],
+            key="display_mode",
+            help=(
+                "Minimalist: Shows character, pinyin, definition, and strokes. "
+                "2-Character Phrases: Shows characters with 2-character compound words. "
+                "3-Character Phrases: Shows characters with 3-character compound words. "
+                "4-Character Idioms: Shows characters with 4-character compound words."
+            )
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # Display selected component with cleaned fields
     st.markdown(f"""
