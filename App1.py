@@ -5,7 +5,7 @@ import streamlit as st
 # Set page configuration
 st.set_page_config(layout="wide")
 
-# Custom CSS for styling with mobile responsiveness and left-aligned sliders
+# Custom CSS for styling with mobile responsiveness and left-aligned sliders and dropdown
 st.markdown("""
 <style>
     .main-header {
@@ -103,6 +103,12 @@ st.markdown("""
     }
     /* Left-align sliders on desktop/laptop */
     .stSlider {
+        text-align: left !important;
+        padding-left: 0 !important;
+        margin-left: 0 !important;
+    }
+    /* Left-align dropdown on desktop/laptop */
+    .stSelectbox {
         text-align: left !important;
         padding-left: 0 !important;
         margin-left: 0 !important;
