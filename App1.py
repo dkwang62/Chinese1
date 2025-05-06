@@ -217,16 +217,14 @@ if st.session_state.selected_comp:
     # Display selected component with cleaned fields
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
-        <h2 style='font-size: 1.2em; margin: 0;'>📌 </h2>
+        <h2 style='font-size: 1.2em; margin: 0;'>📌</h2>
         <span style='font-size: 2.4em;'>{st.session_state.selected_comp}</span>
         <p style='margin: 0;'>
             <strong></strong> {selected_pinyin}   
             <strong></strong> {selected_definition}   
             <strong>Radical:</strong> {selected_radical}   
             <strong>Hint:</strong> {selected_hint}   
-            <strong>Strokes:</strong> {selected_stroke_text}   
-        # <strong>Depth:</strong> {st.session_state.max_depth}   
-        # <strong>Stroke Range:</strong> {min_strokes} – {max_strokes}
+            <strong>Strokes:</strong> {selected_stroke_text} 
         </p>
         <h2 style='font-size: 1.2em; margin: 0;'>🧬 Characters with: {st.session_state.selected_comp} — {len(chars)} result(s)</h2>
     </div>
