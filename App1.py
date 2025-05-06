@@ -52,7 +52,7 @@ def get_all_components(char, max_depth=5, depth=0, seen=None):
         if comp in idc_chars:
             i += 1
             continue
-        if ('一' <= comp <= '鿿' or '\u2E80' <= comp <= '\u2EFF' or
+        if ('一' <= comp <= Henry's' or '\u2E80' <= comp <= '\u2EFF' or
             '\u3400' <= comp <= '\u4DBF' or '\U00020000' <= comp <= '\U0002A6DF'):
             components.add(comp)
             branch_seen = seen.copy()
@@ -164,6 +164,13 @@ with col_b:
 
 # === Display current selection and decomposed characters ===
 if st.session_state.selected_comp:
+    # Fetch pinyin and definition for the selected component
+    selected_entry = char_decomp.get(st.session_state.selected_comp, {})
+    selected_pinyin = selected_entry.get("pinyin", "—")
+    selected_definition = selected_entry.get("definition", "No definition available")
+    selected_stroke_count = get_stroke_count(st.session_state.selected_comp)
+    selected_stroke_text = f"{selected_stroke_count} strokes" if selected_stroke_count != -1 else "unknown strokes"
+
     # Base character list for Minimalist mode
     chars = [
         c for c in component_map.get(st.session_state.selected_comp, [])
@@ -199,13 +206,17 @@ if st.session_state.selected_comp:
 
     chars = sorted(set(filtered_chars), key=get_stroke_count)
 
+    # Display selected component with pinyin and definition
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
         <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
         <span style='font-size: 2.4em;'>{st.session_state.selected_comp}</span>
         <p style='margin: 0;'>
-            <strong>Depth:</strong> {st.session_state.max_depth}    
-            <strong>Strokes:</strong> {min_strokes} – {max_strokes}
+            <strong>Pinyin:</strong> {selected_pinyin} &nbsp;&nbsp;
+            <strong>Definition:</strong> {selected_definition} &nbsp;&nbsp;
+            <strong>Strokes:</strong> {selected_stroke_text} &nbsp;&nbsp;
+            <strong>Depth:</strong> {st.session_state.max_depth} &nbsp;&nbsp;
+            <strong>Stroke Range:</strong> {min_strokes} – {max_strokes}
         </p>
         <h2 style='font-size: 1.2em; margin: 0;'>🧬 Characters with: {st.session_state.selected_comp} — {len(chars)} result(s)</h2>
     </div>
