@@ -162,14 +162,20 @@ with col_b:
         on_change=on_text_input_change
     )
 
+# === Helper: Clean field display ===
+def clean_field(field):
+    if isinstance(field, list):
+        return field[0] if field else "—"
+    return field if field else "—"
+
 # === Display current selection and decomposed characters ===
 if st.session_state.selected_comp:
-    # Fetch pinyin, definition, radical, and hint from etymology for the selected component
+    # Fetch and clean fields for the selected component
     selected_entry = char_decomp.get(st.session_state.selected_comp, {})
-    selected_pinyin = selected_entry.get("pinyin", "—")
-    selected_definition = selected_entry.get("definition", "No definition available")
-    selected_radical = selected_entry.get("radical", "—")
-    selected_hint = selected_entry.get("etymology", {}).get("hint", "No hint available")
+    selected_pinyin = clean_field(selected_entry.get("pinyin", "—"))
+    selected_definition = clean_field(selected_entry.get("definition", "No definition available"))
+    selected_radical = clean_field(selected_entry.get("radical", "—"))
+    selected_hint = clean_field(selected_entry.get("etymology", {}).get("hint", "No hint available"))
     selected_stroke_count = get_stroke_count(st.session_state.selected_comp)
     selected_stroke_text = f"{selected_stroke_count} strokes" if selected_stroke_count != -1 else "unknown strokes"
 
@@ -208,7 +214,7 @@ if st.session_state.selected_comp:
 
     chars = sorted(set(filtered_chars), key=get_stroke_count)
 
-    # Display selected component with pinyin, definition, radical, and hint
+    # Display selected component with cleaned fields
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
         <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
@@ -228,10 +234,10 @@ if st.session_state.selected_comp:
 
     for c in chars:
         entry = char_decomp.get(c, {})
-        pinyin = entry.get("pinyin", "—")
-        definition = entry.get("definition", "No definition available")
-        radical = entry.get("radical", "—")
-        hint = entry.get("etymology", {}).get("hint", "No hint available")
+        pinyin = clean_field(entry.get("pinyin", "—"))
+        definition = clean_field(entry.get("definition", "No definition available"))
+        radical = clean_field(entry.get("radical", "—"))
+        hint = clean_field(entry.get("etymology", {}).get("hint", "No hint available"))
         stroke_count = get_stroke_count(c)
         stroke_text = f"{stroke_count} strokes" if stroke_count != -1 else "unknown strokes"
         st.write(f"**{c}** — {pinyin} — {definition} — Radical: {radical} — Hint: {hint} ({stroke_text})")
