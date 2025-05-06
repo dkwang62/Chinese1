@@ -5,7 +5,7 @@ import streamlit as st
 # Set page configuration
 st.set_page_config(layout="wide")
 
-# Custom CSS for styling with mobile responsiveness
+# Custom CSS for styling with mobile responsiveness and left-aligned sliders
 st.markdown("""
 <style>
     .main-header {
@@ -17,7 +17,7 @@ st.markdown("""
     }
     .controls-container {
         background-color: #f8f9fa;
-        padding: 15px;
+        padding: 15px 0 15px 15px; /* Left padding for alignment, no right padding */
         border-radius: 10px;
         margin-bottom: 20px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -100,6 +100,12 @@ st.markdown("""
         font-size: 1em;
         color: #34495e;
         margin: 0;
+    }
+    /* Left-align sliders on desktop/laptop */
+    .stSlider {
+        text-align: left !important;
+        padding-left: 0 !important;
+        margin-left: 0 !important;
     }
     /* Mobile responsiveness */
     @media (max-width: 768px) {
@@ -340,6 +346,7 @@ if st.session_state.selected_comp:
             filtered_chars.append(c)
             char_compounds[c] = []
         else:
+            filtered_compounds = []  # Initialize filtered_compounds
             # Filter compounds based on display mode
             if st.session_state.display_mode == "2-Character Phrases":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 2]
