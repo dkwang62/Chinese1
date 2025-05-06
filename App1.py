@@ -164,10 +164,12 @@ with col_b:
 
 # === Display current selection and decomposed characters ===
 if st.session_state.selected_comp:
-    # Fetch pinyin and definition for the selected component
+    # Fetch pinyin, definition, radical, and hint for the selected component
     selected_entry = char_decomp.get(st.session_state.selected_comp, {})
     selected_pinyin = selected_entry.get("pinyin", "—")
     selected_definition = selected_entry.get("definition", "No definition available")
+    selected_radical = selected_entry.get("radical", "—")
+    selected_hint = selected_entry.get("hint", "No hint available")
     selected_stroke_count = get_stroke_count(st.session_state.selected_comp)
     selected_stroke_text = f"{selected_stroke_count} strokes" if selected_stroke_count != -1 else "unknown strokes"
 
@@ -206,7 +208,7 @@ if st.session_state.selected_comp:
 
     chars = sorted(set(filtered_chars), key=get_stroke_count)
 
-    # Display selected component with pinyin and definition
+    # Display selected component with pinyin, definition, radical, and hint
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
         <h2 style='font-size: 1.2em; margin: 0;'>📌 Selected</h2>
@@ -214,6 +216,8 @@ if st.session_state.selected_comp:
         <p style='margin: 0;'>
             <strong>Pinyin:</strong> {selected_pinyin}   
             <strong>Definition:</strong> {selected_definition}   
+            <strong>Radical:</strong> {selected_radical}   
+            <strong>Hint:</strong> {selected_hint}   
             <strong>Strokes:</strong> {selected_stroke_text}   
             <strong>Depth:</strong> {st.session_state.max_depth}   
             <strong>Stroke Range:</strong> {min_strokes} – {max_strokes}
@@ -226,9 +230,11 @@ if st.session_state.selected_comp:
         entry = char_decomp.get(c, {})
         pinyin = entry.get("pinyin", "—")
         definition = entry.get("definition", "No definition available")
+        radical = entry.get("radical", "—")
+        hint = entry.get("hint", "No hint available")
         stroke_count = get_stroke_count(c)
         stroke_text = f"{stroke_count} strokes" if stroke_count != -1 else "unknown strokes"
-        st.write(f"**{c}** — {pinyin} — {definition} ({stroke_text})")
+        st.write(f"**{c}** — {pinyin} — {definition} — Radical: {radical} — Hint: {hint} ({stroke_text})")
 
         if st.session_state.display_mode != "Minimalist":
             filtered_compounds = char_compounds.get(c, [])
