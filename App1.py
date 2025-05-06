@@ -5,7 +5,7 @@ import streamlit as st
 # Set page configuration
 st.set_page_config(layout="wide")
 
-# Custom CSS for styling
+# Custom CSS for styling with mobile responsiveness
 st.markdown("""
 <style>
     .main-header {
@@ -93,6 +93,55 @@ st.markdown("""
         font-size: 1em;
         color: #34495e;
         margin: 0;
+    }
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .main-header {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .controls-container {
+            padding: 10px;
+        }
+        .selected-card {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 15px;
+        }
+        .selected-char {
+            font-size: 2em;
+        }
+        .selected-details {
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        .results-header {
+            font-size: 1.3em;
+        }
+        .char-card {
+            padding: 10px;
+        }
+        .char-title {
+            font-size: 1.2em;
+        }
+        .char-details {
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .compounds-title {
+            font-size: 1em;
+        }
+        .compounds-list {
+            font-size: 0.9em;
+        }
+        /* Stack columns vertically on mobile */
+        .stColumn {
+            display: block !important;
+            width: 100% !important;
+        }
+        .stColumn > div {
+            margin-bottom: 10px;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -221,7 +270,7 @@ if st.session_state.selected_comp and st.session_state.selected_comp not in sort
 # === Step 4: Controls ===
 with st.container():
     st.markdown("<div class='controls-container'>", unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1, 1])
     with col1:
         st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
         st.radio(
@@ -237,7 +286,7 @@ with st.container():
         )
     with col2:
         st.slider("Strokes Range", 0, 30, key="stroke_range")
-        col_a, col_b = st.columns(2)
+        col_a, col_b = st.columns([1, 1])
         with col_a:
             st.selectbox(
                 "Select a component:",
