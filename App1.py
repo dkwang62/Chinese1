@@ -196,6 +196,14 @@ def get_stroke_count(char):
     strokes = char_decomp.get(char, {}).get("strokes", None)
     return strokes if strokes is not None else -1
 
+# === Component selection ===
+def on_text_input_change():
+    text_value = st.session_state.text_input_comp.strip()
+    if text_value and (text_value in component_map or text_value in char_decomp):
+        st.session_state.selected_comp = text_value
+    elif text_value:
+        st.warning("Character not found in component map or dictionary. Please enter a valid character.")
+
 # Compute component_map and sorted_components before controls
 min_strokes, max_strokes = st.session_state.stroke_range
 component_map = build_component_map(max_depth=st.session_state.max_depth)
@@ -246,14 +254,6 @@ with st.container():
                 on_change=on_text_input_change
             )
     st.markdown("</div>", unsafe_allow_html=True)
-
-# === Component selection ===
-def on_text_input_change():
-    text_value = st.session_state.text_input_comp.strip()
-    if text_value and (text_value in component_map or text_value in char_decomp):
-        st.session_state.selected_comp = text_value
-    elif text_value:
-        st.warning("Character not found in component map or dictionary. Please enter a valid character.")
 
 # === Helper: Clean field display ===
 def clean_field(field):
