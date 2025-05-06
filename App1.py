@@ -167,7 +167,7 @@ if "max_depth" not in st.session_state:
 if "stroke_range" not in st.session_state:
     st.session_state.stroke_range = (3, 14)
 if "display_mode" not in st.session_state:
-    st.session_state.display_mode = "Minimalist"
+    st.session_state.display_mode = "Single Character"
 
 # === Step 1: Load strokes1.json from local file (cached) ===
 @st.cache_data
@@ -320,7 +320,7 @@ if st.session_state.selected_comp:
     selected_stroke_count = get_stroke_count(st.session_state.selected_comp)
     selected_stroke_text = f"{selected_stroke_count} strokes" if selected_stroke_count != -1 else "unknown strokes"
 
-    # Base character list for Minimalist mode
+    # Base character list for Single Character mode
     chars = [
         c for c in component_map.get(st.session_state.selected_comp, [])
         if min_strokes <= get_stroke_count(c) <= max_strokes
@@ -336,7 +336,7 @@ if st.session_state.selected_comp:
         if not compounds:
             continue  # Skip characters with no compounds for all modes
 
-        if st.session_state.display_mode == "Minimalist":
+        if st.session_state.display_mode == "Single Character":
             filtered_chars.append(c)
             char_compounds[c] = []
         else:
@@ -345,7 +345,7 @@ if st.session_state.selected_comp:
                 filtered_compounds = [comp for comp in compounds if len(comp) == 2]
             elif st.session_state.display_mode == "3-Character Phrases":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 3]
-            elif st.session_state.display_mode == "4-Character Idioms":
+            elif st.session_state.display_mode == "4-Character Phrases":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 4]
 
             # Only include the character if it has compounds that match the filter
@@ -360,13 +360,13 @@ if st.session_state.selected_comp:
         st.markdown("<div class='display-mode-container'>", unsafe_allow_html=True)
         st.radio(
             "Display Mode:",
-            options=["Minimalist", "2-Character Phrases", "3-Character Phrases", "4-Character Idioms"],
+            options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
             key="display_mode",
             help=(
-                "Minimalist: Shows character, pinyin, definition, and strokes. "
+                "Single Character: Shows character, pinyin, definition, and strokes. "
                 "2-Character Phrases: Shows characters with 2-character compound words. "
                 "3-Character Phrases: Shows characters with 3-character compound words. "
-                "4-Character Idioms: Shows characters with 4-character compound words."
+                "4-Character Phrases: Shows characters with 4-character compound words."
             )
         )
         st.markdown("</div>", unsafe_allow_html=True)
@@ -411,8 +411,8 @@ if st.session_state.selected_comp:
             </p>
         """, unsafe_allow_html=True)
 
-        # Display compounds if not in Minimalist mode
-        if st.session_state.display_mode != "Minimalist":
+        # Display compounds if not in Single Character mode
+        if st.session_state.display_mode != "Single Character":
             filtered_compounds = char_compounds.get(c, [])
             if filtered_compounds:
                 sorted_compounds = sorted(filtered_compounds, key=lambda x: x[0])
