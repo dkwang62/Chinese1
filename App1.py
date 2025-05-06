@@ -5,51 +5,54 @@ import streamlit as st
 # Set page configuration
 st.set_page_config(layout="wide")
 
-# Custom CSS for styling with minimized spacing and left-aligned elements
+# Custom CSS for styling with minimized spacing and corrected alignment
 st.markdown("""
 <style>
     .main-header {
         font-size: 2em;
         font-weight: bold;
         color: #2c3e50;
-        margin-bottom: 10px; /* Reduced margin */
+        margin-bottom: 5px;
         text-align: center;
     }
     .controls-container {
         background-color: #f8f9fa;
-        padding: 10px 0 10px 10px; /* Reduced padding */
+        padding: 5px 0 5px 5px;
         border-radius: 5px;
-        margin-bottom: 5px; /* Reduced margin */
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
     }
     .display-mode-container {
         background-color: #f8f9fa;
-        padding: 5px; /* Reduced padding */
+        padding: 5px;
         border-radius: 5px;
-        margin-bottom: 5px; /* Reduced margin */
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         display: flex;
         flex-direction: column;
-        max-width: 250px; /* Slightly reduced width */
+        max-width: 250px;
     }
     .selected-card {
         background-color: #e8f4f8;
-        padding: 15px; /* Reduced padding */
+        padding: 10px;
         border-radius: 5px;
-        margin-bottom: 10px; /* Reduced margin */
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 5px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         display: flex;
         align-items: center;
-        gap: 10px; /* Reduced gap */
-        border-left: 4px solid #3498db; /* Reduced border width */
+        gap: 5px;
+        border-left: 3px solid #3498db;
     }
     .selected-char {
-        font-size: 2em; /* Reduced font size */
+        font-size: 1.8em;
         color: #e74c3c;
         margin: 0;
     }
     .selected-details {
-        font-size: 1em; /* Reduced font size */
+        font-size: 0.9em;
         color: #34495e;
         margin: 0;
     }
@@ -57,73 +60,89 @@ st.markdown("""
         color: #2c3e50;
     }
     .results-header {
-        font-size: 1.3em; /* Reduced font size */
+        font-size: 1.2em;
         color: #2c3e50;
-        margin-top: 10px; /* Reduced margin */
-        margin-bottom: 5px; /* Reduced margin */
+        margin-top: 5px;
+        margin-bottom: 0;
     }
     .char-card {
         background-color: #ffffff;
-        padding: 10px; /* Reduced padding */
+        padding: 8px;
         border-radius: 5px;
-        margin-bottom: 5px; /* Reduced margin */
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Reduced shadow */
+        margin-bottom: 2px;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
         transition: transform 0.2s;
     }
     .char-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Reduced shadow */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .char-title {
-        font-size: 1.2em; /* Reduced font size */
+        font-size: 1.1em;
         color: #e74c3c;
         margin: 0;
         display: inline;
     }
     .char-details {
-        font-size: 0.9em; /* Reduced font size */
+        font-size: 0.8em;
         color: #34495e;
-        margin: 3px 0; /* Reduced margin */
+        margin: 2px 0;
     }
     .char-details strong {
         color: #2c3e50;
     }
     .compounds-section {
         background-color: #f1f8e9;
-        padding: 5px; /* Reduced padding */
+        padding: 3px;
         border-radius: 3px;
-        margin-top: 5px; /* Reduced margin */
+        margin-top: 3px;
     }
     .compounds-title {
-        font-size: 1em; /* Reduced font size */
+        font-size: 0.9em;
         color: #558b2f;
-        margin: 0 0 3px 0; /* Reduced margin */
+        margin: 0 0 2px 0;
     }
     .compounds-list {
-        font-size: 0.9em; /* Reduced font size */
+        font-size: 0.8em;
         color: #34495e;
         margin: 0;
     }
-    /* Left-align sliders on desktop/laptop */
+    /* Left-align sliders */
     .stSlider {
         text-align: left !important;
         padding-left: 0 !important;
         margin-left: 0 !important;
     }
-    /* Left-align dropdown on desktop/laptop with higher specificity */
-    .stSelectbox div[data-baseweb="select"] {
+    /* Left-align dropdown with precise selector */
+    .stSelectbox div[role="combobox"] {
         text-align: left !important;
         padding-left: 0 !important;
         margin-left: 0 !important;
+        width: 100% !important;
+    }
+    /* Remove extra spacing in containers and columns */
+    .stContainer {
+        padding: 0 !important;
+    }
+    .stColumn {
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex;
+        flex-direction: column;
+        gap: 0 !important;
+    }
+    .stColumn > div {
+        margin-bottom: 0 !important;
     }
     /* Mobile responsiveness */
     @media (max-width: 768px) {
         .main-header {
             font-size: 1.5em;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         .controls-container {
-            padding: 8px;
+            padding: 5px;
+            flex-direction: column;
         }
         .display-mode-container {
             padding: 5px;
@@ -132,40 +151,36 @@ st.markdown("""
         .selected-card {
             flex-direction: column;
             align-items: flex-start;
-            padding: 10px;
+            padding: 8px;
         }
         .selected-char {
             font-size: 1.5em;
         }
         .selected-details {
-            font-size: 0.9em;
-            line-height: 1.4;
+            font-size: 0.8em;
+            line-height: 1.3;
         }
         .results-header {
-            font-size: 1.2em;
-        }
-        .char-card {
-            padding: 8px;
-        }
-        .char-title {
             font-size: 1.1em;
         }
+        .char-card {
+            padding: 6px;
+        }
+        .char-title {
+            font-size: 1em;
+        }
         .char-details {
-            font-size: 0.8em;
-            line-height: 1.4;
+            font-size: 0.7em;
+            line-height: 1.3;
         }
         .compounds-title {
-            font-size: 0.9em;
-        }
-        .compounds-list {
             font-size: 0.8em;
         }
-        .stColumn {
-            display: block !important;
-            width: 100% !important;
+        .compounds-list {
+            font-size: 0.7em;
         }
-        .stColumn > div {
-            margin-bottom: 5px;
+        .stColumn {
+            width: 100% !important;
         }
     }
 </style>
@@ -295,12 +310,12 @@ if st.session_state.selected_comp and st.session_state.selected_comp not in sort
 # === Step 4: Controls ===
 with st.container():
     st.markdown("<div class='controls-container'>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1], gap="small")  # Reduced gap between columns
+    col1, col2 = st.columns([1, 1], gap="small")
     with col1:
         st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
     with col2:
         st.slider("Strokes Range", 0, 30, key="stroke_range")
-        col_a, col_b = st.columns([1, 1], gap="small")  # Reduced gap between columns
+        col_a, col_b = st.columns([1, 1], gap="small")
         with col_a:
             st.selectbox(
                 "Select a component:",
@@ -349,19 +364,16 @@ if st.session_state.selected_comp:
         entry = char_decomp.get(c, {})
         compounds = entry.get("compounds", []) or []
         if st.session_state.display_mode == "Single Character":
-            filtered_chars.append(c)  # Include character regardless of compounds
+            filtered_chars.append(c)
             char_compounds[c] = []
         else:
-            filtered_compounds = []  # Initialize filtered_compounds
-            # Filter compounds based on display mode
+            filtered_compounds = []
             if st.session_state.display_mode == "2-Character Phrases":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 2]
             elif st.session_state.display_mode == "3-Character Phrases":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 3]
             elif st.session_state.display_mode == "4-Character Phrases":
                 filtered_compounds = [comp for comp in compounds if len(comp) == 4]
-
-            # Only include the character if it has compounds that match the filter
             if filtered_compounds:
                 filtered_chars.append(c)
                 char_compounds[c] = filtered_compounds
