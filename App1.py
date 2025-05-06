@@ -218,12 +218,12 @@ if st.session_state.selected_comp:
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 20px;'>
         <h2 style='font-size: 1.2em; margin: 0;'>🧬 Characters with: <span style='font-size: 2.4em;'>{st.session_state.selected_comp}</span> — {len(chars)} result(s)</h2>
-        <p style='margin: 0;'>
+        <p style='font-size: 1.2em; margin: 0;'>
             <strong></strong> {selected_pinyin}   
             <strong></strong> {selected_definition}   
             <strong>Radical:</strong> {selected_radical}   
             <strong>Hint:</strong> {selected_hint}   
-            <strong>Strokes:</strong> {selected_stroke_text} 
+            {selected_stroke_text} 
         </p>
             </div>
     """, unsafe_allow_html=True)
