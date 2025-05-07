@@ -117,7 +117,6 @@ def get_all_components(char, max_depth, depth=0, seen=None):
 @st.cache_data
 def build_component_map(max_depth):
     component_map = defaultdict(list)
-    radical_variants = {'⺌': '小', '小': '⺌'}
     
     for char in char_decomp:
         components = set()
@@ -130,14 +129,6 @@ def build_component_map(max_depth):
         
         for comp in components:
             component_map[comp].append(char)
-    
-    # Add variant mappings and expected characters
-    for comp, variant in radical_variants.items():
-        component_map[variant].extend(component_map[comp])
-    for comp in ['⺌', '小']:
-        for char in ['光', '嗩', '尚', '当']:
-            if char not in component_map[comp]:
-                component_map[comp].append(char)
     
     return component_map
 
@@ -197,7 +188,7 @@ def render_char_card(char, compounds):
         "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes"
     }
     
-    details = " ".join(f"<strong>{k}:</strong> {v} &nbsp;" for k, v in fields.items())
+    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
     st.markdown(f"""
     <div class='char-card'>
         <h3 class='char-title'>{char}</h3>
@@ -235,7 +226,7 @@ def main():
         "Depth": str(st.session_state.max_depth),
         "Stroke Range": f"{st.session_state.stroke_range[0]} – {st.session_state.stroke_range[1]}"
     }
-    details = " ".join(f"<strong>{k}:</strong> {v} &nbsp;" for k, v in fields.items())
+    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
     
     st.markdown(f"""
     <div class='selected-card'>
