@@ -62,7 +62,8 @@ def init_session_state():
         "selected_comp": "⺌",
         "max_depth": 0,
         "stroke_range": (3, 14),
-        "display_mode": "Single Character"
+        "display_mode": "Single Character",
+        "selected_idc": "No Filter"  # Default IDC filter
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -154,7 +155,11 @@ def render_controls(component_map):
     
     st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
     st.slider("Strokes Range", 0, 30, key="stroke_range")
-    col1, col2 = st.columns(2)
+    
+    # IDC options
+    idc_options = ["No Filter"] + sorted(['⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'])
+    
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         st.selectbox(
@@ -171,6 +176,14 @@ def render_controls(component_map):
             key="text_input_comp",
             on_change=on_text_input_change
         )
+    with col3:
+        st.selectbox(
+            "IDC Character structure:",
+            options=idc_options,
+            index=idc_options.index(st.session_state.selected_idc) if st.session_state.selected_idc in idc_options else 0,
+            key="selected_idc"
+        )
+    
     st.radio(
         "Display Mode:",
         options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
@@ -192,7 +205,7 @@ def render_char_card(char, compounds):
         "Radical": clean_field(entry.get("radical", "—")),
         "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
         "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
-        "IDC": idc  # Add IDC field
+        "IDC": idc  # Display IDC
     }
     
     details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
@@ -233,7 +246,7 @@ def main():
         "Depth": str(st.session_state.max_depth),
         "Stroke Range": f"{st.session_state.stroke_range[0]} – {st.session_state.stroke_range[1]}"
     }
-    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
+    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
     
     st.markdown(f"""
     <div class='selected-card'>
@@ -242,12 +255,19 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # Filter and display characters
+    # Filter characters by component and stroke range
     min_strokes, max_strokes = st.session_state.stroke_range
     chars = [
         c for c in component_map.get(st.session_state.selected_comp, [])
         if min_strokes <= get_stroke_count(c) <= max_strokes
     ]
+    
+    # Apply IDC filter
+    if st.session_state.selected_idc != "No Filter":
+        chars = [
+            c for c in chars
+            if char_decomp.get(c, {}).get("decomposition", "").startswith(st.session_state.selected_idc)
+        ]
     
     char_compounds = {}
     for c in chars:
