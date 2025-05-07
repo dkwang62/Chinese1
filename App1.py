@@ -180,15 +180,22 @@ def render_controls(component_map):
 # Render character card
 def render_char_card(char, compounds):
     entry = char_decomp.get(char, {})
+    # Define valid IDC characters
+    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+    # Get IDC from decomposition
+    decomposition = entry.get("decomposition", "")
+    idc = decomposition[0] if decomposition and decomposition[0] in idc_chars else "—"
+    
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Definition": clean_field(entry.get("definition", "No definition available")),
         "Radical": clean_field(entry.get("radical", "—")),
         "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
-        "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes"
+        "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
+        "IDC": idc  # Add IDC field
     }
     
-    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
+    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
     st.markdown(f"""
     <div class='char-card'>
         <h3 class='char-title'>{char}</h3>
