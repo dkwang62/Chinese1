@@ -133,9 +133,6 @@ def build_component_map(max_depth):
     
     return component_map
 
-# Initialize component_map globally
-component_map = build_component_map(st.session_state.max_depth)
-
 # Component selection handler
 def on_text_input_change():
     text_value = st.session_state.text_input_comp.strip()
@@ -231,6 +228,7 @@ def render_char_card(char, compounds):
 
 # Main rendering
 def main():
+    component_map = build_component_map(st.session_state.max_depth)
     st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
     render_controls(component_map)
     
