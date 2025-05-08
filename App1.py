@@ -83,9 +83,6 @@ def load_char_decomp():
 
 char_decomp = load_char_decomp()
 
-# Initialize component_map globally
-component_map = build_component_map(st.session_state.max_depth)
-
 # Utility functions
 def is_valid_char(c):
     return ('一' <= c <= '鿿' or '\u2E80' <= c <= '\u2EFF' or
@@ -135,6 +132,9 @@ def build_component_map(max_depth):
             component_map[comp].append(char)
     
     return component_map
+
+# Initialize component_map globally
+component_map = build_component_map(st.session_state.max_depth)
 
 # Component selection handler
 def on_text_input_change():
