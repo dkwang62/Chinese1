@@ -134,7 +134,7 @@ def build_component_map(max_depth):
     return component_map
 
 # Component selection handler
-def on_text_input_change():
+def on_text_input_change(component_map):
     text_value = st.session_state.text_input_comp.strip()
     if text_value in component_map or text_value in char_decomp:
         st.session_state.selected_comp = text_value
@@ -174,7 +174,8 @@ def render_controls(component_map):
             "Or type a component:",
             value=st.session_state.selected_comp,
             key="text_input_comp",
-            on_change=on_text_input_change
+            on_change=on_text_input_change,
+            args=(component_map,)
         )
     with col3:
         st.selectbox(
