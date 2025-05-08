@@ -83,6 +83,9 @@ def load_char_decomp():
 
 char_decomp = load_char_decomp()
 
+# Initialize component_map globally
+component_map = build_component_map(st.session_state.max_depth)
+
 # Utility functions
 def is_valid_char(c):
     return ('一' <= c <= '鿿' or '\u2E80' <= c <= '\u2EFF' or
@@ -229,7 +232,6 @@ def render_char_card(char, compounds):
 # Main rendering
 def main():
     st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
-    component_map = build_component_map(st.session_state.max_depth)
     render_controls(component_map)
     
     if not st.session_state.selected_comp:
