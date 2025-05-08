@@ -63,7 +63,8 @@ def init_session_state():
         "max_depth": 0,
         "stroke_range": (3, 14),
         "display_mode": "Single Character",
-        "selected_idc": "No Filter"  # Default IDC filter
+        "selected_idc": "No Filter",
+        "idc_refresh": False  # Add a trigger for IDC recalculation
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -138,6 +139,7 @@ def on_text_input_change(component_map):
     text_value = st.session_state.text_input_comp.strip()
     if text_value in component_map or text_value in char_decomp:
         st.session_state.selected_comp = text_value
+        st.session_state.idc_refresh = not st.session_state.idc_refresh  # Trigger IDC recalculation
     elif text_value:
         st.warning("Invalid character. Please enter a valid component.")
 
@@ -160,14 +162,18 @@ def render_controls(component_map):
     idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
     chars = [
         c for c in component_map.get(st.session_state.selected_comp, [])
-        if min_strokes <= get_stroke_count(c) <= max_strokes
+        if min_strokes <= get_stroke_count(c) <= max_strokes and c in char_decomp
     ]
     dynamic_idc_options = {"No Filter"}
     for char in chars:
         decomposition = char_decomp.get(char, {}).get("decomposition", "")
-        if decomposition and decomposition[0] in idc_chars:
+        if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
             dynamic_idc_options.add(decomposition[0])
     idc_options = sorted(list(dynamic_idc_options))
+    
+    # Reset selected_idc if it's no longer in the options
+    if st.session_state.selected_idc not in idc_options:
+        st.session_state.selected_idc = "No Filter"
     
     col1, col2, col3 = st.columns(3)
     
@@ -177,7 +183,8 @@ def render_controls(component_map):
             options=sorted_components,
             format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
             index=sorted_components.index(st.session_state.selected_comp) if st.session_state.selected_comp in sorted_components else 0,
-            key="selected_comp"
+            key="selected_comp",
+            on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
         )
     with col2:
         st.text_input(
@@ -208,7 +215,7 @@ def render_char_card(char, compounds):
     idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
     # Get IDC from decomposition
     decomposition = entry.get("decomposition", "")
-    idc = decomposition[0] if decomposition and decomposition[0] in idc_chars else "—"
+    idc = decomposition[0] if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars else "—"
     
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
