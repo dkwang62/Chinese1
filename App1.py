@@ -232,7 +232,14 @@ def main():
     component_map = build_component_map(st.session_state.max_depth)
     st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
     render_controls(component_map)
-    
+
+    # Reset button to clear session state
+    if st.button("Reset App"):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        init_session_state()
+        st.experimental_rerun()
+
     if not st.session_state.selected_comp:
         return
     
