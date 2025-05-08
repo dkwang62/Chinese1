@@ -156,8 +156,18 @@ def render_controls(component_map):
     st.slider("Max Decomposition Depth", 0, 5, key="max_depth")
     st.slider("Strokes Range", 0, 30, key="stroke_range")
     
-    # IDC options
-    idc_options = ["No Filter"] + sorted(['⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'])
+    # Dynamically generate IDC options based on selected component
+    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+    chars = [
+        c for c in component_map.get(st.session_state.selected_comp, [])
+        if min_strokes <= get_stroke_count(c) <= max_strokes
+    ]
+    dynamic_idc_options = {"No Filter"}
+    for char in chars:
+        decomposition = char_decomp.get(char, {}).get("decomposition", "")
+        if decomposition and decomposition[0] in idc_chars:
+            dynamic_idc_options.add(decomposition[0])
+    idc_options = sorted(list(dynamic_idc_options))
     
     col1, col2, col3 = st.columns(3)
     
@@ -232,14 +242,14 @@ def main():
     component_map = build_component_map(st.session_state.max_depth)
     st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
     render_controls(component_map)
-
-    # Reset button to clear session state
+    
+    # Reset button to clear session state with instruction
     if st.button("Reset App"):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         init_session_state()
-    #   st.experimental_rerun()
-        st.warning("App reset. Please rerun the app by refreshing the page or visiting https://chinese1-mcguwrauq4krutvfkyrbkg.streamlit.app/ again.")    
+        st.warning("App reset. Please rerun the app by refreshing the page or visiting https://chinese1-mcguwrauq4krutvfkyrbkg.streamlit.app/ again.")
+
     if not st.session_state.selected_comp:
         return
     
