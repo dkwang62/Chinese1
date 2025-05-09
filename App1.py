@@ -305,7 +305,7 @@ def main():
             options=options,
             key="output_char_select",
             on_change=lambda: on_output_char_select(component_map),
-            format_func=lambda c: c if c == "Select a character..." else f"{c} ({get_stroke_count(c)} strokes, {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
+            format_func=lambda c: c if c == "Select a character..." else f"{c} ({clean_field(char_decomp.get("pinyin", "—"))},{get_stroke_count(c)} strokes, {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
         )
 
     st.markdown(f"<h2 class='results-header'>🧬 Characters with {st.session_state.selected_comp} — {len(filtered_chars)} result(s)</h2>", unsafe_allow_html=True)
