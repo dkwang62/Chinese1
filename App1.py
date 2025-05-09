@@ -66,6 +66,11 @@ def init_session_state():
             "stroke_range": (4, 14)
         },
         {
+            "selected_comp": "心",
+            "max_depth": 3,
+            "stroke_range": (4, 14)
+        },       
+        {
             "selected_comp": "⺌",
             "max_depth": 0,
             "stroke_range": (3, 14)
