@@ -1,4 +1,3 @@
-# modified for dropdown on output
 import json
 from collections import defaultdict
 import streamlit as st
