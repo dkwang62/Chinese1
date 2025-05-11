@@ -250,10 +250,10 @@ def render_controls(component_map):
                     f"{get_stroke_count(c)} strokes, "
                     f"{clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
                 ),
-                index=sorted_components.index(st.session_state.selected_comp),
                 key="selected_comp",
                 on_change=on_selectbox_change
             )
+
         with col2:
             st.text_input("Or type:", key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
 
