@@ -6,8 +6,25 @@ import random
 
 st.set_page_config(layout="wide")
 
-# --- Global IDC Characters ---
+# --- Global IDC Characters & Descriptions ---
 idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+
+IDC_DESCRIPTIONS = {
+    "No Filter": "No Filter",
+    "⿰": "Left Right",
+    "⿱": "Top Bottom",
+    "⿲": "Left Middle Right",
+    "⿳": "Top Middle Bottom",
+    "⿴": "Surround",
+    "⿵": "Surround Top",
+    "⿶": "Surround Bottom",
+    "⿷": "Surround Left",
+    "⿸": "Top Left Corner",
+    "⿹": "Top Right Corner",
+    "⿺": "Bottom Left Corner",
+    "⿻": "Overlaid"
+}
+
 
 # --- Custom CSS ---
 st.markdown("""
