@@ -200,6 +200,7 @@ def on_reset_filters():
     st.session_state.page = 1
 
 def render_controls(component_map):
+    
     idc_descriptions = {
         "No Filter": "No Filter",
         "⿰": "Left Right",
@@ -300,46 +301,40 @@ def render_controls(component_map):
                      key="display_mode",
                      help="Choose 'Single Character' to view characters without compounds, or select a phrase length to view compounds.")
 
-def render_char_card(char, compounds):
-    entry = char_decomp.get(char, {})
-    decomposition = entry.get("decomposition", "")
-    idc = decomposition[0] if decomposition and decomposition[0] in idc_chars else "—"
-    fields = {
-        "Pinyin": clean_field(entry.get("pinyin", "—")),
-        "Definition": clean_field(entry.get("definition", "No definition available")),
-        "Radical": clean_field(entry.get("radical", "—")),
-        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
-        "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
-        "IDC": idc
-    }
-    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
-    st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
-    if compounds and st.session_state.display_mode != "Single Character":
-        compounds_text = " ".join(sorted(compounds, key=lambda x: x[0]))
-        st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
+    
 def main():
     component_map = build_component_map(max_depth=5)
+
     st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
 
+    # Step 1: Render input selection controls
     render_controls(component_map)
 
+    # Step 2: Exit early if no character is selected
     if not st.session_state.selected_comp:
         return
 
+    # Step 3: Render selected character info card ABOVE filter section
     entry = char_decomp.get(st.session_state.selected_comp, {})
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Definition": clean_field(entry.get("definition", "No definition available")),
         "Radical": clean_field(entry.get("radical", "—")),
         "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
-        "Strokes": f"{get_stroke_count(st.session_state.selected_comp)} strokes" if get_stroke_count(st.session_state.selected_comp) != -1 else "unknown strokes"
+        "Strokes": f"{get_stroke_count(st.session_state.selected_comp)} strokes"
+                   if get_stroke_count(st.session_state.selected_comp) != -1 else "unknown strokes"
     }
     details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
-    st.markdown(f"""<div class='selected-card'><h2 class='selected-char'>{st.session_state.selected_comp}</h2><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
+    st.markdown(
+        f"""<div class='selected-card'>
+                <h2 class='selected-char'>{st.session_state.selected_comp}</h2>
+                <p class='details'>{details}</p>
+            </div>""",
+        unsafe_allow_html=True
+    )
 
-    # Shortlisted components: single characters, any stroke count
+    # Step 4: Filter output characters based on selected component
     chars = [c for c in component_map.get(st.session_state.selected_comp, []) if c in char_decomp]
     if st.session_state.selected_idc != "No Filter":
         chars = [c for c in chars if char_decomp.get(c, {}).get("decomposition", "").startswith(st.session_state.selected_idc)]
@@ -353,29 +348,40 @@ def main():
             length = int(st.session_state.display_mode[0])  # Extract 2, 3, or 4
             char_compounds[c] = [comp for comp in compounds if len(comp) == length]
 
-    # Include all chars for Single Character, only chars with compounds for phrases
-    filtered_chars = chars if st.session_state.display_mode == "Single Character" else [c for c in chars if char_compounds[c]]
+    filtered_chars = chars if st.session_state.display_mode == "Single Character" else [
+        c for c in chars if char_compounds[c]
+    ]
 
+    # Step 5: Output character dropdown (optional selection)
     if filtered_chars:
         options = ["Select a character..."] + sorted(filtered_chars, key=get_stroke_count)
-        if (st.session_state.previous_selected_comp and 
-            st.session_state.previous_selected_comp != st.session_state.selected_comp and 
-            st.session_state.previous_selected_comp not in filtered_chars and 
+        if (st.session_state.previous_selected_comp and
+            st.session_state.previous_selected_comp != st.session_state.selected_comp and
+            st.session_state.previous_selected_comp not in filtered_chars and
             st.session_state.previous_selected_comp in component_map):
             options.insert(1, st.session_state.previous_selected_comp)
+
         st.selectbox(
             "Select a character from the list below:",
             options=options,
             key="output_char_select",
             on_change=lambda: on_output_char_select(component_map),
-            format_func=lambda c: c if c == "Select a character..." else f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))},{get_stroke_count(c)} strokes, {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
+            format_func=lambda c: c if c == "Select a character..." else
+            f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
+            f"{get_stroke_count(c)} strokes, "
+            f"{clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
         )
 
-    st.markdown(f"<h2 class='results-header'>🧬 Results for {st.session_state.selected_comp} — {len(filtered_chars)} result(s)</h2>", unsafe_allow_html=True)
+    # Step 6: Results section
+    st.markdown(
+        f"<h2 class='results-header'>🧬 Results for {st.session_state.selected_comp} — {len(filtered_chars)} result(s)</h2>",
+        unsafe_allow_html=True
+    )
 
     for char in sorted(filtered_chars, key=get_stroke_count):
         render_char_card(char, char_compounds.get(char, []))
 
+    # Step 7: Optional export
     if filtered_chars and st.session_state.display_mode != "Single Character":
         with st.expander("Export Compounds"):
             st.caption("Copy this text to get pinyin and meanings for the displayed compounds.")
