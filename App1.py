@@ -262,21 +262,21 @@ def render_controls(component_map):
 
  #       with st.expander("Advanced Component Filters"):
  #           col4, col5 = st.columns(2)
-            with col4:
-                st.selectbox("Component Stroke Count:", options=[0] + stroke_counts,
-                             index=0 if st.session_state.stroke_count == 0 else stroke_counts.index(st.session_state.stroke_count) + 1,
-                             key="stroke_count",
-                             help="Filter input components by their stroke count. Select 0 for no filter.")
-            with col5:
-                component_idc_options = ["No Filter"] + sorted(idc_descriptions.keys() - {"No Filter"})
-                st.selectbox(
-                    "Component IDC:",
-                    options=component_idc_options,
-                    format_func=lambda x: x if x == "No Filter" else f"{x} ({idc_descriptions[x]})",
-                    index=component_idc_options.index(st.session_state.component_idc),
-                    key="component_idc",
-                    help="Filter input components by the structure of the character (IDC)."
-                )
+        with col4:
+            st.selectbox("Component Stroke Count:", options=[0] + stroke_counts,
+                index=0 if st.session_state.stroke_count == 0 else stroke_counts.index(st.session_state.stroke_count) + 1,
+                key="stroke_count",
+                help="Filter input components by their stroke count. Select 0 for no filter.")
+        with col5:
+            component_idc_options = ["No Filter"] + sorted(idc_descriptions.keys() - {"No Filter"})
+            st.selectbox(
+                "Component IDC:",
+                options=component_idc_options,
+                format_func=lambda x: x if x == "No Filter" else f"{x} ({idc_descriptions[x]})",
+                index=component_idc_options.index(st.session_state.component_idc),
+                key="component_idc",
+                help="Filter input components by the structure of the character (IDC)."
+            )
 
     with st.container():
         st.markdown("### Filter Output Characters")
