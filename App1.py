@@ -52,12 +52,12 @@ st.markdown("""
         margin-bottom: 15px;
     }
     .stButton button {
-        background-color: #e74c3c;
+        background-color: #3498db;
         color: white;
         border-radius: 5px;
     }
     .stButton button:hover {
-        background-color: #c0392b;
+        background-color: #2980b9;
     }
     @media (max-width: 768px) {
         .selected-card { flex-direction: column; align-items: flex-start; padding: 10px; }
@@ -89,7 +89,8 @@ def init_session_state():
         "text_input_comp": selected_config["selected_comp"],
         "page": 1,
         "results_per_page": 50,
-        "previous_selected_comp": selected_config["selected_comp"]
+        "previous_selected_comp": selected_config["selected_comp"],
+        "apply_filters": False
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -187,83 +188,127 @@ def on_output_char_select(component_map):
         st.session_state.idc_refresh = not st.session_state.idc_refresh
         st.session_state.page = 1
 
+def on_search_button():
+    # Toggle filters: apply if not applied, lift if applied
+    if st.session_state.apply_filters:
+        st.session_state.apply_filters = False
+        st.session_state.stroke_count = 0  # Reset to a neutral value
+        st.session_state.component_idc = "No Filter"
+    else:
+        st.session_state.apply_filters = True
+    st.session_state.idc_refresh = not st.session_state.idc_refresh
+    st.session_state.page = 1
+
 def render_controls(component_map):
+    idc_descriptions = {
+        "No Filter": "No Filter",
+        "⿰": "Left Right",
+        "⿱": "Top Bottom",
+        "⿲": "Left Middle Right",
+        "⿳": "Top Middle Bottom",
+        "⿴": "Surround",
+        "⿵": "Surround Top",
+        "⿶": "Surround Bottom",
+        "⿷": "Surround Left",
+        "⿸": "Top Left Corner",
+        "⿹": "Top Right Corner",
+        "⿺": "Bottom Left Corner",
+        "⿻": "Overlaid"
+    }
+
     with st.container():
         st.markdown("### Select Input Component")
         st.caption("Choose or type a single character to explore its related characters.")
-        col1, col2 = st.columns([1, 1])
+        col1, col2, col3 = st.columns([2, 2, 1])
         with col1:
-            # Get unique stroke counts for input component
-            stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
-            if st.session_state.stroke_count not in stroke_counts:
-                stroke_counts.append(st.session_state.stroke_count)
-                stroke_counts.sort()
+            # Component dropdown: all components unless filters applied
+            if st.session_state.apply_filters:
+                stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
+                if st.session_state.stroke_count not in stroke_counts and st.session_state.stroke_count != 0:
+                    stroke_counts.append(st.session_state.stroke_count)
+                    stroke_counts.sort()
 
-            # Get IDC options for input component
-            idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
-            component_idc_options = {"No Filter"}
-            for comp in component_map:
-                decomposition = char_decomp.get(comp, {}).get("decomposition", "")
-                if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
-                    component_idc_options.add(decomposition[0])
-            component_idc_options = sorted(list(component_idc_options))
-            if st.session_state.component_idc not in component_idc_options:
-                st.session_state.component_idc = "No Filter"
+                idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+                component_idc_options = {"No Filter"}
+                for comp in component_map:
+                    decomposition = char_decomp.get(comp, {}).get("decomposition", "")
+                    if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
+                        component_idc_options.add(decomposition[0])
+                component_idc_options = sorted(list(component_idc_options))
 
-            # Filter components by stroke count and IDC
-            filtered_components = [
-                comp for comp in component_map
-                if get_stroke_count(comp) == st.session_state.stroke_count and
-                (st.session_state.component_idc == "No Filter" or
-                 char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc))
-            ]
-            sorted_components = sorted(filtered_components, key=get_stroke_count)
+                filtered_components = [
+                    comp for comp in component_map
+                    if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
+                    (st.session_state.component_idc == "No Filter" or
+                     char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc))
+                ]
+                sorted_components = sorted(filtered_components, key=get_stroke_count)
+            else:
+                sorted_components = sorted(component_map.keys(), key=get_stroke_count)
+
             if st.session_state.selected_comp not in sorted_components:
                 sorted_components.insert(0, st.session_state.selected_comp)
 
-            st.selectbox("Select a component:", options=sorted_components,
-                         format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
-                         index=sorted_components.index(st.session_state.selected_comp),
-                         key="selected_comp",
-                         on_change=on_selectbox_change)
+            st.selectbox(
+                "Select a component:",
+                options=sorted_components,
+                format_func=lambda c: (
+                    c if c not in char_decomp else
+                    f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
+                    f"{char_decomp.get(c, {}).get('decomposition', '—')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in idc_chars else '—'}, "
+                    f"{get_stroke_count(c)} strokes, "
+                    f"{clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
+                ),
+                index=sorted_components.index(st.session_state.selected_comp),
+                key="selected_comp",
+                on_change=on_selectbox_change
+            )
         with col2:
             st.text_input("Or type a component:", value=st.session_state.selected_comp,
                           key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
+        with col3:
+            st.button("Search", on_click=on_search_button, help="Apply or clear advanced filters for the component dropdown.")
 
         with st.expander("Advanced Component Filters"):
-            col3, col4 = st.columns(2)
-            with col3:
-                st.selectbox("Component Stroke Count:", options=stroke_counts,
-                             index=stroke_counts.index(st.session_state.stroke_count),
-                             key="stroke_count",
-                             help="Filter input components by their stroke count.")
+            col4, col5 = st.columns(2)
             with col4:
-                st.selectbox("Component IDC:", options=component_idc_options,
-                             index=component_idc_options.index(st.session_state.component_idc),
-                             key="component_idc",
-                             help="Filter input components by their IDC structure.")
+                stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
+                st.selectbox("Component Stroke Count:", options=[0] + stroke_counts,
+                             index=0 if st.session_state.stroke_count == 0 else stroke_counts.index(st.session_state.stroke_count) + 1,
+                             key="stroke_count",
+                             help="Filter input components by their stroke count. Select 0 for no filter.")
+            with col5:
+                component_idc_options = ["No Filter"] + sorted(idc_descriptions.keys() - {"No Filter"})
+                st.selectbox(
+                    "Component IDC:",
+                    options=component_idc_options,
+                    format_func=lambda x: idc_descriptions[x],
+                    index=component_idc_options.index(st.session_state.component_idc),
+                    key="component_idc",
+                    help="Filter input components by their IDC structure."
+                )
 
     with st.container():
         st.markdown("### Filter Output Characters")
         st.caption("Customize the output by IDC structure and whether to show single characters or compound phrases.")
-        col5, col6 = st.columns([1, 1])
-        with col5:
-            # Get IDC options for shortlisted components
+        col6, col7 = st.columns([1, 1])
+        with col6:
             chars = component_map.get(st.session_state.selected_comp, [])
             dynamic_idc_options = {"No Filter"}
             for char in chars:
                 decomposition = char_decomp.get(char, {}).get("decomposition", "")
                 if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
                     dynamic_idc_options.add(decomposition[0])
-            idc_options = sorted(list(dynamic_idc_options))
-            if st.session_state.selected_idc not in idc_options:
-                st.session_state.selected_idc = "No Filter"
-
-            st.selectbox("Result IDC:", options=idc_options,
-                         index=idc_options.index(st.session_state.selected_idc),
-                         key="selected_idc",
-                         help="Filter output characters by their IDC structure.")
-        with col6:
+            idc_options = ["No Filter"] + sorted(dynamic_idc_options - {"No Filter"})
+            st.selectbox(
+                "Result IDC:",
+                options=idc_options,
+                format_func=lambda x: idc_descriptions.get(x, x),
+                index=idc_options.index(st.session_state.selected_idc),
+                key="selected_idc",
+                help="Filter output characters by their IDC structure."
+            )
+        with col7:
             st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
                      key="display_mode",
                      help="Choose 'Single Character' to view characters without compounds, or select a phrase length to view compounds.")
@@ -293,8 +338,6 @@ def main():
     st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
 
     render_controls(component_map)
-
-    st.button("Reset App", help="Reset all selections and refresh the page.")
 
     if not st.session_state.selected_comp:
         return
