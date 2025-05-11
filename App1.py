@@ -274,6 +274,9 @@ def render_controls(component_map):
                 help="Filter input components by the structure of the character (IDC)."
             )
 
+for char in sorted(filtered_chars, key=get_stroke_count):
+        render_char_card(char, char_compounds.get(char, []))
+
 def main():
     component_map = build_component_map(max_depth=5)
     st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
@@ -328,9 +331,6 @@ def main():
         )
 
     st.markdown(f"<h2 class='results-header'>🧬 Results for {st.session_state.selected_comp} — {len(filtered_chars)} result(s)</h2>", unsafe_allow_html=True)
-
-    for char in sorted(filtered_chars, key=get_stroke_count):
-        render_char_card(char, char_compounds.get(char, []))
 
     # Output filtering controls
     with st.container():
