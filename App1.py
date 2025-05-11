@@ -373,8 +373,8 @@ def main():
 
     st.markdown(f"<h2 class='results-header'>🧬 Results for {st.session_state.selected_comp} — {len(filtered_chars)} result(s)</h2>", unsafe_allow_html=True)
 
-    for char in sorted(filtered_chars, key=get_stroke_count):
-        render_char_card(char, char_compounds.get(char, []))
+#    for char in sorted(filtered_chars, key=get_stroke_count):
+#        render_char_card(char, char_compounds.get(char, []))
 
     if filtered_chars and st.session_state.display_mode != "Single Character":
         with st.expander("Export Compounds"):
