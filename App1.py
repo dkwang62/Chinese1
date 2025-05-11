@@ -78,8 +78,11 @@ st.markdown("""
 def init_session_state():
     config_options = [
         {"selected_comp": "爫", "stroke_count": 4, "selected_idc": "No Filter", "component_idc": "No Filter", "display_mode": "Single Character"},
-        {"selected_comp": "心", "stroke_count": 4, "selected_idc": "No Filter", "component_idc": "No Filter", "display_mode": "2-Character Phrases"},
+        {"selected_comp": "心", "stroke_count": 4, "selected_idc": "No Filter", "component_idc": "⿱", "display_mode": "2-Character Phrases"},
         {"selected_comp": "⺌", "stroke_count": 3, "selected_idc": "No Filter", "component_idc": "No Filter", "display_mode": "3-Character Phrases"}
+        {"selected_comp": "㐱", "stroke_count": 5, "selected_idc": "No Filter", "component_idc": "No Filter", "display_mode": "Single Character"},
+        {"selected_comp": "覀", "stroke_count": 6, "selected_idc": "No Filter", "component_idc": "No Filter", "display_mode": "2-Character Phrases"},
+        {"selected_comp": "豕", "stroke_count": 7, "selected_idc": "No Filter", "component_idc": "⿰", "display_mode": "3-Character Phrases"}
     ]
     selected_config = random.choice(config_options)
     defaults = {
