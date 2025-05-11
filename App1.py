@@ -368,9 +368,11 @@ def main():
             length = int(st.session_state.display_mode[0])  # Extract 2, 3, or 4
             char_compounds[c] = [comp for comp in compounds if len(comp) == length]
 
-    filtered_chars = chars if st.session_state.display_mode == "Single Character" else [
-        c for c in chars if char_compounds[c]
-    ]
+    filtered_chars = [
+        c for c in chars 
+        if c != st.session_state.selected_comp and
+           (st.session_state.display_mode == "Single Character" or char_compounds[c])
+    ]    
 
     # Step 5: Output character dropdown (optional selection)
     if filtered_chars:
