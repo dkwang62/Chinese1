@@ -370,7 +370,7 @@ def main():
 
     filtered_chars = [
         c for c in chars 
-        if c != st.session_state.selected_comp and
+        if c.strip() != st.session_state.selected_comp.strip() and
            (st.session_state.display_mode == "Single Character" or char_compounds[c])
     ]    
 
