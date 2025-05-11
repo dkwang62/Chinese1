@@ -45,6 +45,20 @@ st.markdown("""
     }
     .compounds-title { font-size: 1.1em; color: #558b2f; margin: 0 0 5px; }
     .compounds-list { font-size: 1em; color: #34495e; margin: 0; }
+    .stContainer {
+        padding: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .stButton button {
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 5px;
+    }
+    .stButton button:hover {
+        background-color: #c0392b;
+    }
     @media (max-width: 768px) {
         .selected-card { flex-direction: column; align-items: flex-start; padding: 10px; }
         .selected-char { font-size: 2em; }
@@ -174,72 +188,85 @@ def on_output_char_select(component_map):
         st.session_state.page = 1
 
 def render_controls(component_map):
-    # Get unique stroke counts for input component
-    stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
-    if st.session_state.stroke_count not in stroke_counts:
-        stroke_counts.append(st.session_state.stroke_count)
-        stroke_counts.sort()
+    with st.container():
+        st.markdown("### Select Input Component")
+        st.caption("Choose or type a single character to explore its related characters.")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            # Get unique stroke counts for input component
+            stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
+            if st.session_state.stroke_count not in stroke_counts:
+                stroke_counts.append(st.session_state.stroke_count)
+                stroke_counts.sort()
 
-    # Get IDC options for input component
-    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
-    component_idc_options = {"No Filter"}
-    for comp in component_map:
-        decomposition = char_decomp.get(comp, {}).get("decomposition", "")
-        if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
-            component_idc_options.add(decomposition[0])
-    component_idc_options = sorted(list(component_idc_options))
-    if st.session_state.component_idc not in component_idc_options:
-        st.session_state.component_idc = "No Filter"
+            # Get IDC options for input component
+            idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+            component_idc_options = {"No Filter"}
+            for comp in component_map:
+                decomposition = char_decomp.get(comp, {}).get("decomposition", "")
+                if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
+                    component_idc_options.add(decomposition[0])
+            component_idc_options = sorted(list(component_idc_options))
+            if st.session_state.component_idc not in component_idc_options:
+                st.session_state.component_idc = "No Filter"
 
-    # Filter components by stroke count and IDC
-    filtered_components = [
-        comp for comp in component_map
-        if get_stroke_count(comp) == st.session_state.stroke_count and
-        (st.session_state.component_idc == "No Filter" or
-         char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc))
-    ]
-    sorted_components = sorted(filtered_components, key=get_stroke_count)
-    if st.session_state.selected_comp not in sorted_components:
-        sorted_components.insert(0, st.session_state.selected_comp)
+            # Filter components by stroke count and IDC
+            filtered_components = [
+                comp for comp in component_map
+                if get_stroke_count(comp) == st.session_state.stroke_count and
+                (st.session_state.component_idc == "No Filter" or
+                 char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc))
+            ]
+            sorted_components = sorted(filtered_components, key=get_stroke_count)
+            if st.session_state.selected_comp not in sorted_components:
+                sorted_components.insert(0, st.session_state.selected_comp)
 
-    # Get IDC options for shortlisted components
-    chars = component_map.get(st.session_state.selected_comp, [])
-    dynamic_idc_options = {"No Filter"}
-    for char in chars:
-        decomposition = char_decomp.get(char, {}).get("decomposition", "")
-        if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
-            dynamic_idc_options.add(decomposition[0])
-    idc_options = sorted(list(dynamic_idc_options))
-    if st.session_state.selected_idc not in idc_options:
-        st.session_state.selected_idc = "No Filter"
+            st.selectbox("Select a component:", options=sorted_components,
+                         format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
+                         index=sorted_components.index(st.session_state.selected_comp),
+                         key="selected_comp",
+                         on_change=on_selectbox_change)
+        with col2:
+            st.text_input("Or type a component:", value=st.session_state.selected_comp,
+                          key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.selectbox("Select a component:", options=sorted_components,
-                     format_func=lambda c: f"{c} ({get_stroke_count(c)} strokes)",
-                     index=sorted_components.index(st.session_state.selected_comp),
-                     key="selected_comp",
-                     on_change=on_selectbox_change)
-    with col2:
-        st.text_input("Or type a component:", value=st.session_state.selected_comp,
-                      key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
-    with col3:
-        st.selectbox("Select Component Stroke Count:", options=stroke_counts,
-                     index=stroke_counts.index(st.session_state.stroke_count),
-                     key="stroke_count")
+        with st.expander("Advanced Component Filters"):
+            col3, col4 = st.columns(2)
+            with col3:
+                st.selectbox("Component Stroke Count:", options=stroke_counts,
+                             index=stroke_counts.index(st.session_state.stroke_count),
+                             key="stroke_count",
+                             help="Filter input components by their stroke count.")
+            with col4:
+                st.selectbox("Component IDC:", options=component_idc_options,
+                             index=component_idc_options.index(st.session_state.component_idc),
+                             key="component_idc",
+                             help="Filter input components by their IDC structure.")
 
-    col4, col5, col6 = st.columns(3)
-    with col4:
-        st.selectbox("Component IDC:", options=component_idc_options,
-                     index=component_idc_options.index(st.session_state.component_idc),
-                     key="component_idc")
-    with col5:
-        st.selectbox("Result IDC:", options=idc_options,
-                     index=idc_options.index(st.session_state.selected_idc),
-                     key="selected_idc")
-    with col6:
-        st.radio("Output Mode:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
-                 key="display_mode")
+    with st.container():
+        st.markdown("### Filter Output Characters")
+        st.caption("Customize the output by IDC structure and whether to show single characters or compound phrases.")
+        col5, col6 = st.columns([1, 1])
+        with col5:
+            # Get IDC options for shortlisted components
+            chars = component_map.get(st.session_state.selected_comp, [])
+            dynamic_idc_options = {"No Filter"}
+            for char in chars:
+                decomposition = char_decomp.get(char, {}).get("decomposition", "")
+                if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
+                    dynamic_idc_options.add(decomposition[0])
+            idc_options = sorted(list(dynamic_idc_options))
+            if st.session_state.selected_idc not in idc_options:
+                st.session_state.selected_idc = "No Filter"
+
+            st.selectbox("Result IDC:", options=idc_options,
+                         index=idc_options.index(st.session_state.selected_idc),
+                         key="selected_idc",
+                         help="Filter output characters by their IDC structure.")
+        with col6:
+            st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
+                     key="display_mode",
+                     help="Choose 'Single Character' to view characters without compounds, or select a phrase length to view compounds.")
 
 def render_char_card(char, compounds):
     entry = char_decomp.get(char, {})
@@ -264,13 +291,10 @@ def render_char_card(char, compounds):
 def main():
     component_map = build_component_map(max_depth=5)
     st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
+
     render_controls(component_map)
 
-    if st.button("Reset App"):
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        init_session_state()
-        st.warning("Please refresh the page")
+    st.button("Reset App", help="Reset all selections and refresh the page.")
 
     if not st.session_state.selected_comp:
         return
@@ -318,28 +342,29 @@ def main():
             format_func=lambda c: c if c == "Select a character..." else f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))},{get_stroke_count(c)} strokes, {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
         )
 
-    st.markdown(f"<h2 class='results-header'>🧬 Characters with {st.session_state.selected_comp} — {len(filtered_chars)} result(s)</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 class='results-header'>🧬 Results for {st.session_state.selected_comp} — {len(filtered_chars)} result(s)</h2>", unsafe_allow_html=True)
 
     for char in sorted(filtered_chars, key=get_stroke_count):
         render_char_card(char, char_compounds.get(char, []))
 
     if filtered_chars and st.session_state.display_mode != "Single Character":
-        export_text = "Give me the hanyu pinyin and meaning of each compound phrase in one line a phrase in a downloadable word file\n\n"
-        export_text += "\n".join(
-            f"{compound}"
-            for char in filtered_chars
-            for compound in char_compounds.get(char, [])
-        )
-        st.text_area("Right click, Select all, copy; paste to ChatGPT", export_text, height=300, key="export_text")
-
-        components.html(f"""
-            <textarea id="copyTarget" style="opacity:0;position:absolute;left:-9999px;">{export_text}</textarea>
-            <script>
-            const copyText = document.getElementById("copyTarget");
-            copyText.select();
-            document.execCommand("copy");
-            </script>
-        """, height=0)
+        with st.expander("Export Compounds"):
+            st.caption("Copy this text to get pinyin and meanings for the displayed compounds.")
+            export_text = "Give me the hanyu pinyin and meaning of each compound phrase in one line a phrase in a downloadable word file\n\n"
+            export_text += "\n".join(
+                f"{compound}"
+                for char in filtered_chars
+                for compound in char_compounds.get(char, [])
+            )
+            st.text_area("Export Text", export_text, height=200, key="export_text")
+            components.html(f"""
+                <textarea id="copyTarget" style="opacity:0;position:absolute;left:-9999px;">{export_text}</textarea>
+                <script>
+                const copyText = document.getElementById("copyTarget");
+                copyText.select();
+                document.execCommand("copy");
+                </script>
+            """, height=0)
 
 if __name__ == "__main__":
     main()
