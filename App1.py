@@ -6,6 +6,9 @@ import random
 
 st.set_page_config(layout="wide")
 
+# --- Global IDC Characters ---
+idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+
 # --- Custom CSS ---
 st.markdown("""
 <style>
@@ -128,7 +131,6 @@ def get_all_components(char, max_depth, depth=0, seen=None):
     seen.add(char)
     components = set()
     decomposition = char_decomp.get(char, {}).get("decomposition", "")
-    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
     for comp in decomposition:
         if comp in idc_chars or not is_valid_char(comp):
             continue
@@ -192,7 +194,7 @@ def on_search_button():
     # Toggle filters: apply if not applied, lift if applied
     if st.session_state.apply_filters:
         st.session_state.apply_filters = False
-        st.session_state.stroke_count = 0  # Reset to a neutral value
+        st.session_state.stroke_count = 0
         st.session_state.component_idc = "No Filter"
     else:
         st.session_state.apply_filters = True
@@ -228,7 +230,6 @@ def render_controls(component_map):
                     stroke_counts.append(st.session_state.stroke_count)
                     stroke_counts.sort()
 
-                idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
                 component_idc_options = {"No Filter"}
                 for comp in component_map:
                     decomposition = char_decomp.get(comp, {}).get("decomposition", "")
@@ -315,14 +316,13 @@ def render_controls(component_map):
 
 def render_char_card(char, compounds):
     entry = char_decomp.get(char, {})
-    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
     decomposition = entry.get("decomposition", "")
     idc = decomposition[0] if decomposition and decomposition[0] in idc_chars else "—"
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Definition": clean_field(entry.get("definition", "No definition available")),
         "Radical": clean_field(entry.get("radical", "—")),
-        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
+        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No definition available")),
         "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
         "IDC": idc
     }
@@ -347,7 +347,7 @@ def main():
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Definition": clean_field(entry.get("definition", "No definition available")),
         "Radical": clean_field(entry.get("radical", "—")),
-        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
+        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No definition available")),
         "Strokes": f"{get_stroke_count(st.session_state.selected_comp)} strokes" if get_stroke_count(st.session_state.selected_comp) != -1 else "unknown strokes"
     }
     details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
