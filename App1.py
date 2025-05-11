@@ -60,9 +60,9 @@ st.markdown("""
 # --- Initialize session state ---
 def init_session_state():
     config_options = [
-        {"selected_comp": "爫", "stroke_count": 4, "selected_idc": "No Filter", "display_mode": "2-Character Phrases"},
-        {"selected_comp": "心", "stroke_count": 4, "selected_idc": "No Filter", "display_mode": "3-Character Phrases"},
-        {"selected_comp": "⺌", "stroke_count": 3, "selected_idc": "No Filter", "display_mode": "4-Character Phrases"}
+        {"selected_comp": "爫", "stroke_count": 4, "selected_idc": "No Filter", "component_idc": "No Filter", "display_mode": "Single Character"},
+        {"selected_comp": "心", "stroke_count": 4, "selected_idc": "No Filter", "component_idc": "No Filter", "display_mode": "2-Character Phrases"},
+        {"selected_comp": "⺌", "stroke_count": 3, "selected_idc": "No Filter", "component_idc": "No Filter", "display_mode": "3-Character Phrases"}
     ]
     selected_config = random.choice(config_options)
     defaults = {
@@ -70,6 +70,7 @@ def init_session_state():
         "stroke_count": selected_config["stroke_count"],
         "display_mode": selected_config["display_mode"],
         "selected_idc": selected_config["selected_idc"],
+        "component_idc": selected_config["component_idc"],
         "idc_refresh": False,
         "text_input_comp": selected_config["selected_comp"],
         "page": 1,
@@ -173,21 +174,35 @@ def on_output_char_select(component_map):
         st.session_state.page = 1
 
 def render_controls(component_map):
-    # Get unique stroke counts from component_map for input component
+    # Get unique stroke counts for input component
     stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
     if st.session_state.stroke_count not in stroke_counts:
         stroke_counts.append(st.session_state.stroke_count)
         stroke_counts.sort()
 
+    # Get IDC options for input component
+    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+    component_idc_options = {"No Filter"}
+    for comp in component_map:
+        decomposition = char_decomp.get(comp, {}).get("decomposition", "")
+        if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
+            component_idc_options.add(decomposition[0])
+    component_idc_options = sorted(list(component_idc_options))
+    if st.session_state.component_idc not in component_idc_options:
+        st.session_state.component_idc = "No Filter"
+
+    # Filter components by stroke count and IDC
     filtered_components = [
         comp for comp in component_map
-        if get_stroke_count(comp) == st.session_state.stroke_count
+        if get_stroke_count(comp) == st.session_state.stroke_count and
+        (st.session_state.component_idc == "No Filter" or
+         char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc))
     ]
     sorted_components = sorted(filtered_components, key=get_stroke_count)
     if st.session_state.selected_comp not in sorted_components:
         sorted_components.insert(0, st.session_state.selected_comp)
 
-    idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
+    # Get IDC options for shortlisted components
     chars = component_map.get(st.session_state.selected_comp, [])
     dynamic_idc_options = {"No Filter"}
     for char in chars:
@@ -213,12 +228,17 @@ def render_controls(component_map):
                      index=stroke_counts.index(st.session_state.stroke_count),
                      key="stroke_count")
 
-    col4, col5 = st.columns(2)
+    col4, col5, col6 = st.columns(3)
     with col4:
-        st.selectbox("Result filtered by IDC Character structure:", options=idc_options,
-                     index=idc_options.index(st.session_state.selected_idc), key="selected_idc")
+        st.selectbox("Component IDC:", options=component_idc_options,
+                     index=component_idc_options.index(st.session_state.component_idc),
+                     key="component_idc")
     with col5:
-        st.radio("Compound Length:", options=["2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
+        st.selectbox("Result IDC:", options=idc_options,
+                     index=idc_options.index(st.session_state.selected_idc),
+                     key="selected_idc")
+    with col6:
+        st.radio("Output Mode:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
                  key="display_mode")
 
 def render_char_card(char, compounds):
@@ -236,7 +256,7 @@ def render_char_card(char, compounds):
     }
     details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
     st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
-    if compounds:
+    if compounds and st.session_state.display_mode != "Single Character":
         compounds_text = " ".join(sorted(compounds, key=lambda x: x[0]))
         st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -274,10 +294,14 @@ def main():
     char_compounds = {}
     for c in chars:
         compounds = char_decomp.get(c, {}).get("compounds", [])
-        length = int(st.session_state.display_mode[0])  # Extract 2, 3, or 4 from display_mode
-        char_compounds[c] = [comp for comp in compounds if len(comp) == length]
+        if st.session_state.display_mode == "Single Character":
+            char_compounds[c] = []
+        else:
+            length = int(st.session_state.display_mode[0])  # Extract 2, 3, or 4
+            char_compounds[c] = [comp for comp in compounds if len(comp) == length]
 
-    filtered_chars = [c for c in chars if char_compounds[c]]  # Only include chars with matching compounds
+    # Include all chars for Single Character, only chars with compounds for phrases
+    filtered_chars = chars if st.session_state.display_mode == "Single Character" else [c for c in chars if char_compounds[c]]
 
     if filtered_chars:
         options = ["Select a character..."] + sorted(filtered_chars, key=get_stroke_count)
@@ -299,7 +323,7 @@ def main():
     for char in sorted(filtered_chars, key=get_stroke_count):
         render_char_card(char, char_compounds.get(char, []))
 
-    if filtered_chars:
+    if filtered_chars and st.session_state.display_mode != "Single Character":
         export_text = "Give me the hanyu pinyin and meaning of each compound phrase in one line a phrase in a downloadable word file\n\n"
         export_text += "\n".join(
             f"{compound}"
