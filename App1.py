@@ -172,6 +172,7 @@ def on_text_input_change(component_map):
 
 def on_selectbox_change():
     st.session_state.previous_selected_comp = st.session_state.selected_comp
+    st.session_state.text_input_comp = st.session_state.selected_comp  # Sync text input to match dropdown
     st.session_state.idc_refresh = not st.session_state.idc_refresh
     st.session_state.page = 1
 
@@ -254,8 +255,10 @@ def render_controls(component_map):
                 on_change=on_selectbox_change
             )
         with col2:
-            st.text_input("Or type:", value=st.session_state.selected_comp,
-                          key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
+            st.text_input("Or type:", key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
+
+            # st.text_input("Or type:", value=st.session_state.selected_comp,
+            #               key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
         with col3:
             st.button("Reset Component Strokes & IDC Filters", on_click=on_reset_filters, help="Show all components in the dropdown by clearing stroke count and IDC filters.")
         with col4:
