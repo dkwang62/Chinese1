@@ -60,15 +60,15 @@ st.markdown("""
 # --- Initialize session state ---
 def init_session_state():
     config_options = [
-        {"selected_comp": "爫", "stroke_count": 4, "selected_idc": "No Filter"},
-        {"selected_comp": "心", "stroke_count": 4, "selected_idc": "No Filter"},
-        {"selected_comp": "⺌", "stroke_count": 3, "selected_idc": "No Filter"}
+        {"selected_comp": "爫", "stroke_count": 4, "selected_idc": "No Filter", "display_mode": "2-Character Phrases"},
+        {"selected_comp": "心", "stroke_count": 4, "selected_idc": "No Filter", "display_mode": "3-Character Phrases"},
+        {"selected_comp": "⺌", "stroke_count": 3, "selected_idc": "No Filter", "display_mode": "4-Character Phrases"}
     ]
     selected_config = random.choice(config_options)
     defaults = {
         "selected_comp": selected_config["selected_comp"],
         "stroke_count": selected_config["stroke_count"],
-        "display_mode": "Single Character",
+        "display_mode": selected_config["display_mode"],
         "selected_idc": selected_config["selected_idc"],
         "idc_refresh": False,
         "text_input_comp": selected_config["selected_comp"],
@@ -137,12 +137,16 @@ def build_component_map(max_depth=5):
 
 def on_text_input_change(component_map):
     text_value = st.session_state.text_input_comp.strip()
+    if len(text_value) != 1:
+        st.warning("Please enter exactly one character.")
+        st.session_state.text_input_comp = st.session_state.selected_comp
+        return
     if text_value in component_map or text_value in char_decomp:
         st.session_state.previous_selected_comp = st.session_state.selected_comp
         st.session_state.selected_comp = text_value
         st.session_state.idc_refresh = not st.session_state.idc_refresh
         st.session_state.page = 1
-    elif text_value:
+    else:
         st.warning("Invalid character. Please enter a valid component.")
         st.session_state.text_input_comp = st.session_state.selected_comp
 
@@ -217,7 +221,7 @@ def render_controls(component_map):
         st.selectbox("Result filtered by IDC Character structure:", options=idc_options,
                      index=idc_options.index(st.session_state.selected_idc), key="selected_idc")
     with col5:
-        st.radio("Display Mode:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
+        st.radio("Compound Length:", options=["2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
                  key="display_mode")
 
 def render_char_card(char, compounds):
@@ -235,7 +239,7 @@ def render_char_card(char, compounds):
     }
     details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
     st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
-    if compounds and st.session_state.display_mode != "Single Character":
+    if compounds:
         compounds_text = " ".join(sorted(compounds, key=lambda x: x[0]))
         st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -273,13 +277,10 @@ def main():
     char_compounds = {}
     for c in chars:
         compounds = char_decomp.get(c, {}).get("compounds", [])
-        if st.session_state.display_mode == "Single Character":
-            char_compounds[c] = []
-        else:
-            length = int(st.session_state.display_mode[0])
-            char_compounds[c] = [comp for comp in compounds if len(comp) == length]
+        length = int(st.session_state.display_mode[0])  # Extract 2, 3, or 4 from display_mode
+        char_compounds[c] = [comp for comp in compounds if len(comp) == length]
 
-    filtered_chars = [c for c in chars if not char_compounds[c] == [] or st.session_state.display_mode == "Single Character"]
+    filtered_chars = [c for c in chars if char_compounds[c]]  # Only include chars with matching compounds
 
     if filtered_chars:
         options = ["Select a character..."] + sorted(filtered_chars, key=get_stroke_count)
@@ -313,8 +314,7 @@ def main():
         components.html(f"""
             <textarea id="copyTarget" style="opacity:0;position:absolute;left:-9999px;">{export_text}</textarea>
             <script>
-            const copyText = document.getElementById("copyTarget");
-            copyText.select();
+            const copyText = document target'select();
             document.execCommand("copy");
             </script>
         """, height=0)
