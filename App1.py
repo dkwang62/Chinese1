@@ -274,7 +274,16 @@ def render_controls(component_map):
                 help="Filter input components by the structure of the character (IDC)."
             )
 
-entry = char_decomp.get(st.session_state.selected_comp, {})
+def main():
+    component_map = build_component_map(max_depth=5)
+    st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
+
+    render_controls(component_map)
+
+    if not st.session_state.selected_comp:
+        return
+        
+    entry = char_decomp.get(st.session_state.selected_comp, {})
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Definition": clean_field(entry.get("definition", "No definition available")),
@@ -284,60 +293,6 @@ entry = char_decomp.get(st.session_state.selected_comp, {})
     }
     details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
     st.markdown(f"""<div class='selected-card'><h2 class='selected-char'>{st.session_state.selected_comp}</h2><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
-    
-    with st.container():
-        st.markdown("### Filter Output Characters")
-        st.caption("Customize the output by the character structure (IDC) and whether to show single characters or compound phrases.")
-        col6, col7 = st.columns([1, 1])
-        with col6:
-            chars = component_map.get(st.session_state.selected_comp, [])
-            dynamic_idc_options = {"No Filter"}
-            for char in chars:
-                decomposition = char_decomp.get(char, {}).get("decomposition", "")
-                if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
-                    dynamic_idc_options.add(decomposition[0])
-            idc_options = ["No Filter"] + sorted(dynamic_idc_options - {"No Filter"})
-            st.selectbox(
-                "Result IDC:",
-                options=idc_options,
-                format_func=lambda x: x if x == "No Filter" else f"{x} ({idc_descriptions.get(x, x)})",
-                index=idc_options.index(st.session_state.selected_idc),
-                key="selected_idc",
-                help="Filter output characters by their IDC structure."
-            )
-        with col7:
-            st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
-                     key="display_mode",
-                     help="Choose 'Single Character' to view characters without compounds, or select a phrase length to view compounds.")
-
-def render_char_card(char, compounds):
-    entry = char_decomp.get(char, {})
-    decomposition = entry.get("decomposition", "")
-    idc = decomposition[0] if decomposition and decomposition[0] in idc_chars else "—"
-    fields = {
-        "Pinyin": clean_field(entry.get("pinyin", "—")),
-        "Definition": clean_field(entry.get("definition", "No definition available")),
-        "Radical": clean_field(entry.get("radical", "—")),
-        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
-        "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
-        "IDC": idc
-    }
-    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
-    st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
-    if compounds and st.session_state.display_mode != "Single Character":
-        compounds_text = " ".join(sorted(compounds, key=lambda x: x[0]))
-        st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-def main():
-    component_map = build_component_map(max_depth=5)
-    st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
-
-    render_controls(component_map)
-
-    if not st.session_state.selected_comp:
-        return
-
     # Shortlisted components: single characters, any stroke count
     chars = [c for c in component_map.get(st.session_state.selected_comp, []) if c in char_decomp]
     if st.session_state.selected_idc != "No Filter":
@@ -393,6 +348,50 @@ def main():
                 document.execCommand("copy");
                 </script>
             """, height=0)
+    with st.container():
+        st.markdown("### Filter Output Characters")
+        st.caption("Customize the output by the character structure (IDC) and whether to show single characters or compound phrases.")
+        col6, col7 = st.columns([1, 1])
+        with col6:
+            chars = component_map.get(st.session_state.selected_comp, [])
+            dynamic_idc_options = {"No Filter"}
+            for char in chars:
+                decomposition = char_decomp.get(char, {}).get("decomposition", "")
+                if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
+                    dynamic_idc_options.add(decomposition[0])
+            idc_options = ["No Filter"] + sorted(dynamic_idc_options - {"No Filter"})
+            st.selectbox(
+                "Result IDC:",
+                options=idc_options,
+                format_func=lambda x: x if x == "No Filter" else f"{x} ({idc_descriptions.get(x, x)})",
+                index=idc_options.index(st.session_state.selected_idc),
+                key="selected_idc",
+                help="Filter output characters by their IDC structure."
+            )
+        with col7:
+            st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
+                     key="display_mode",
+                     help="Choose 'Single Character' to view characters without compounds, or select a phrase length to view compounds.")
+
+def render_char_card(char, compounds):
+    entry = char_decomp.get(char, {})
+    decomposition = entry.get("decomposition", "")
+    idc = decomposition[0] if decomposition and decomposition[0] in idc_chars else "—"
+    fields = {
+        "Pinyin": clean_field(entry.get("pinyin", "—")),
+        "Definition": clean_field(entry.get("definition", "No definition available")),
+        "Radical": clean_field(entry.get("radical", "—")),
+        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
+        "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
+        "IDC": idc
+    }
+    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
+    st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
+    if compounds and st.session_state.display_mode != "Single Character":
+        compounds_text = " ".join(sorted(compounds, key=lambda x: x[0]))
+        st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
