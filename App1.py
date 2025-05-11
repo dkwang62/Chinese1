@@ -185,9 +185,7 @@ def render_controls(component_map):
 
     idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
     chars = [
-        c for c in component
-
-_map.get(st.session_state.selected_comp, [])
+        c for c in component_map.get(st.session_state.selected_comp, [])
         if get_stroke_count(c) == st.session_state.stroke_count and c in char_decomp
     ]
     dynamic_idc_options = {"No Filter"}
@@ -249,9 +247,9 @@ def main():
 
     if st.button("Reset App"):
         for key in list(st.session_state.keys()):
-            del st.session_state[key]
+            del st.session_state recr[key]
         init_session_state()
-        st.warning("Please refresh the page https://chinese-5n7qfcqoljkixr2spprdbr.streamlit.app/ or https://chinese1-mcguwrauq4krutvfkyrbkg.streamlit.app/")
+        st.warning("Please refresh the page")
 
     if not st.session_state.selected_comp:
         return
