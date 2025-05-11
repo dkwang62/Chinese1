@@ -260,7 +260,7 @@ def render_controls(component_map):
         with col3:
             st.button("Reset Filters", on_click=on_reset_filters, help="Show all components in the dropdown by clearing stroke count and IDC filters.")
 
-        with st.expander("Advanced Component Filters"):
+ #       with st.expander("Advanced Component Filters"):
             col4, col5 = st.columns(2)
             with col4:
                 st.selectbox("Component Stroke Count:", options=[0] + stroke_counts,
@@ -275,12 +275,12 @@ def render_controls(component_map):
                     format_func=lambda x: x if x == "No Filter" else f"{x} ({idc_descriptions[x]})",
                     index=component_idc_options.index(st.session_state.component_idc),
                     key="component_idc",
-                    help="Filter input components by their IDC structure."
+                    help="Filter input components by the structure of the character (IDC)."
                 )
 
     with st.container():
         st.markdown("### Filter Output Characters")
-        st.caption("Customize the output by IDC structure and whether to show single characters or compound phrases.")
+        st.caption("Customize the output by the character structure (IDC) and whether to show single characters or compound phrases.")
         col6, col7 = st.columns([1, 1])
         with col6:
             chars = component_map.get(st.session_state.selected_comp, [])
