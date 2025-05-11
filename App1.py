@@ -247,7 +247,7 @@ def main():
 
     if st.button("Reset App"):
         for key in list(st.session_state.keys()):
-            del st.session_state recr[key]
+            del st.session_state[key]
         init_session_state()
         st.warning("Please refresh the page")
 
