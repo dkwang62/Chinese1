@@ -173,7 +173,7 @@ def on_output_char_select(component_map):
         st.session_state.page = 1
 
 def render_controls(component_map):
-    # Get unique stroke counts from component_map
+    # Get unique stroke counts from component_map for input component
     stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
     if st.session_state.stroke_count not in stroke_counts:
         stroke_counts.append(st.session_state.stroke_count)
@@ -188,10 +188,7 @@ def render_controls(component_map):
         sorted_components.insert(0, st.session_state.selected_comp)
 
     idc_chars = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
-    chars = [
-        c for c in component_map.get(st.session_state.selected_comp, [])
-        if get_stroke_count(c) == st.session_state.stroke_count and c in char_decomp
-    ]
+    chars = component_map.get(st.session_state.selected_comp, [])
     dynamic_idc_options = {"No Filter"}
     for char in chars:
         decomposition = char_decomp.get(char, {}).get("decomposition", "")
@@ -212,7 +209,7 @@ def render_controls(component_map):
         st.text_input("Or type a component:", value=st.session_state.selected_comp,
                       key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
     with col3:
-        st.selectbox("Select Stroke Count:", options=stroke_counts,
+        st.selectbox("Select Component Stroke Count:", options=stroke_counts,
                      index=stroke_counts.index(st.session_state.stroke_count),
                      key="stroke_count")
 
@@ -269,8 +266,8 @@ def main():
     details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
     st.markdown(f"""<div class='selected-card'><h2 class='selected-char'>{st.session_state.selected_comp}</h2><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
 
-    chars = [c for c in component_map.get(st.session_state.selected_comp, [])
-             if get_stroke_count(c) == st.session_state.stroke_count]
+    # Shortlisted components: single characters, any stroke count
+    chars = [c for c in component_map.get(st.session_state.selected_comp, []) if c in char_decomp]
     if st.session_state.selected_idc != "No Filter":
         chars = [c for c in chars if char_decomp.get(c, {}).get("decomposition", "").startswith(st.session_state.selected_idc)]
 
@@ -314,7 +311,8 @@ def main():
         components.html(f"""
             <textarea id="copyTarget" style="opacity:0;position:absolute;left:-9999px;">{export_text}</textarea>
             <script>
-            const copyText = document target'select();
+            const copyText = document.getElementById("copyTarget");
+            copyText.select();
             document.execCommand("copy");
             </script>
         """, height=0)
