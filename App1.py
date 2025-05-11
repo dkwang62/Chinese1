@@ -143,6 +143,10 @@ def build_component_map(max_depth=5):
     return component_map
 
 # --- UI Component Selection ---
+def on_selectbox_change():
+    st.session_state.previous_selected_comp = st.session_state.selected_comp
+    st.session_state.idc_refresh = not st.session_state.idc_refresh
+    st.session_state.page = 1
 def render_component_selection(component_map):
     st.markdown("### 🔍 Select Input Component")
     st.caption("Choose or type a single character to explore its related characters.")
