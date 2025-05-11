@@ -381,7 +381,7 @@ def main():
             st.caption("Copy this text to get pinyin and meanings for the displayed compounds.")
             export_text = "Give me the hanyu pinyin and meaning of each compound phrase in one line a phrase in a downloadable word file\n\n"
             export_text += "\n".join(
-                f"{compound coasts}"
+                f"{compound}"
                 for char in filtered_chars
                 for compound in char_compounds.get(char, [])
             )
