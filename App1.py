@@ -330,24 +330,7 @@ def main():
     for char in sorted(filtered_chars, key=get_stroke_count):
         render_char_card(char, char_compounds.get(char, []))
 
-    if filtered_chars and st.session_state.display_mode != "Single Character":
-        with st.expander("Export Compounds"):
-            st.caption("Copy this text to get pinyin and meanings for the displayed compounds.")
-            export_text = "Give me the hanyu pinyin and meaning of each compound phrase in one line a phrase in a downloadable word file\n\n"
-            export_text += "\n".join(
-                f"{compound}"
-                for char in filtered_chars
-                for compound in char_compounds.get(char, [])
-            )
-            st.text_area("Export Text", export_text, height=200, key="export_text")
-            components.html(f"""
-                <textarea id="copyTarget" style="opacity:0;position:absolute;left:-9999px;">{export_text}</textarea>
-                <script>
-                const copyText = document.getElementById("copyTarget");
-                copyText.select();
-                document.execCommand("copy");
-                </script>
-            """, height=0)
+    
     with st.container():
         st.markdown("### Filter Output Characters")
         st.caption("Customize the output by the character structure (IDC) and whether to show single characters or compound phrases.")
@@ -392,6 +375,23 @@ def render_char_card(char, compounds):
         st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-
+if filtered_chars and st.session_state.display_mode != "Single Character":
+        with st.expander("Export Compounds"):
+            st.caption("Copy this text to get pinyin and meanings for the displayed compounds.")
+            export_text = "Give me the hanyu pinyin and meaning of each compound phrase in one line a phrase in a downloadable word file\n\n"
+            export_text += "\n".join(
+                f"{compound}"
+                for char in filtered_chars
+                for compound in char_compounds.get(char, [])
+            )
+            st.text_area("Export Text", export_text, height=200, key="export_text")
+            components.html(f"""
+                <textarea id="copyTarget" style="opacity:0;position:absolute;left:-9999px;">{export_text}</textarea>
+                <script>
+                const copyText = document.getElementById("copyTarget");
+                copyText.select();
+                document.execCommand("copy");
+                </script>
+            """, height=0)
 if __name__ == "__main__":
     main()
