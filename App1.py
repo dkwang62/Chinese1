@@ -274,6 +274,17 @@ def render_controls(component_map):
                 help="Filter input components by the structure of the character (IDC)."
             )
 
+entry = char_decomp.get(st.session_state.selected_comp, {})
+    fields = {
+        "Pinyin": clean_field(entry.get("pinyin", "—")),
+        "Definition": clean_field(entry.get("definition", "No definition available")),
+        "Radical": clean_field(entry.get("radical", "—")),
+        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
+        "Strokes": f"{get_stroke_count(st.session_state.selected_comp)} strokes" if get_stroke_count(st.session_state.selected_comp) != -1 else "unknown strokes"
+    }
+    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
+    st.markdown(f"""<div class='selected-card'><h2 class='selected-char'>{st.session_state.selected_comp}</h2><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
+    
     with st.container():
         st.markdown("### Filter Output Characters")
         st.caption("Customize the output by the character structure (IDC) and whether to show single characters or compound phrases.")
@@ -326,17 +337,6 @@ def main():
 
     if not st.session_state.selected_comp:
         return
-
-    entry = char_decomp.get(st.session_state.selected_comp, {})
-    fields = {
-        "Pinyin": clean_field(entry.get("pinyin", "—")),
-        "Definition": clean_field(entry.get("definition", "No definition available")),
-        "Radical": clean_field(entry.get("radical", "—")),
-        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
-        "Strokes": f"{get_stroke_count(st.session_state.selected_comp)} strokes" if get_stroke_count(st.session_state.selected_comp) != -1 else "unknown strokes"
-    }
-    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
-    st.markdown(f"""<div class='selected-card'><h2 class='selected-char'>{st.session_state.selected_comp}</h2><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
 
     # Shortlisted components: single characters, any stroke count
     chars = [c for c in component_map.get(st.session_state.selected_comp, []) if c in char_decomp]
