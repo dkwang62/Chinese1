@@ -274,8 +274,26 @@ def render_controls(component_map):
                 help="Filter input components by the structure of the character (IDC)."
             )
 
-for char in sorted(filtered_chars, key=get_stroke_count):
-        render_char_card(char, char_compounds.get(char, []))
+
+def render_char_card(char, compounds):
+    entry = char_decomp.get(char, {})
+    decomposition = entry.get("decomposition", "")
+    idc = decomposition[0] if decomposition and decomposition[0] in idc_chars else "—"
+    fields = {
+        "Pinyin": clean_field(entry.get("pinyin", "—")),
+        "Definition": clean_field(entry.get("definition", "No definition available")),
+        "Radical": clean_field(entry.get("radical", "—")),
+        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
+        "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
+        "IDC": idc
+    }
+    details = " ".join(f"<strong>{k}:</strong> {v}  " for k, v in fields.items())
+    st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
+    if compounds and st.session_state.display_mode != "Single Character":
+        compounds_text = " ".join(sorted(compounds, key=lambda x: x[0]))
+        st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 def main():
     component_map = build_component_map(max_depth=5)
@@ -357,7 +375,9 @@ def main():
             st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
                      key="display_mode",
                      help="Choose 'Single Character' to view characters without compounds, or select a phrase length to view compounds.")
-
+    for char in sorted(filtered_chars, key=get_stroke_count):
+        render_char_card(char, char_compounds.get(char, []))
+    
     # Export section moved inside main()
     if filtered_chars and st.session_state.display_mode != "Single Character":
         with st.expander("Export Compounds"):
