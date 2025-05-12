@@ -239,6 +239,8 @@ def sync_state():
 
 def render_controls(component_map):
     
+    sync_state()
+    
     idc_descriptions = {
         "No Filter": "No Filter",
         "⿰": "Left Right",
