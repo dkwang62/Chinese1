@@ -317,9 +317,10 @@ def render_controls(component_map):
                 ),
                 key="selected_comp",
                 on_change=on_selectbox_change
-                sync_state()
             )
 
+            sync_state()
+        
         with col2:
             st.text_input("Or type:", key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
 
