@@ -237,13 +237,13 @@ def render_controls(component_map):
                 get_stroke_count(comp) > 1
             ]
             sorted_components = sorted(filtered_components, key=get_stroke_count)
-            # Validate selected_comp and set selectbox value
-            selectbox_value = None
+            # Validate selected_comp and set selectbox index
+            selectbox_index = 0
             if sorted_components:
                 if st.session_state.selected_comp not in sorted_components:
                     st.session_state.selected_comp = sorted_components[0]
                     st.session_state.text_input_comp = sorted_components[0]
-                selectbox_value = st.session_state.selected_comp
+                selectbox_index = sorted_components.index(st.session_state.selected_comp)
             else:
                 st.session_state.selected_comp = ""
                 st.session_state.text_input_comp = ""
@@ -253,7 +253,7 @@ def render_controls(component_map):
                 st.selectbox(
                     "Select a component:",
                     options=sorted_components,
-                    value=selectbox_value,
+                    index=selectbox_index,
                     format_func=lambda c: (
                         f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
                         f"{char_decomp.get(c, {}).get('decomposition', '—')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
@@ -311,7 +311,7 @@ def render_char_card(char, compounds):
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Definition": clean_field(entry.get("definition", "No definition available")),
         "Radical": clean_field(entry.get("radical", "—")),
-        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No definition available")),
+        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
         "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
         "IDC": idc
     }
