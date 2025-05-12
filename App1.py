@@ -223,7 +223,16 @@ def is_reset_needed():
         st.session_state.selected_comp != st.session_state.text_input_comp
     )
 
+def sync_state():
+    """
+    Keeps selected_comp and text_input_comp in sync.
+    Always makes text_input reflect the dropdown (selected_comp).
+    """
+    if st.session_state.get("text_input_comp") != st.session_state.get("selected_comp"):
+        st.session_state.text_input_comp = st.session_state.selected_comp
+
 def render_controls(component_map):
+    
     idc_descriptions = {
         "No Filter": "No Filter",
         "⿰": "Left Right",
@@ -264,6 +273,8 @@ def render_controls(component_map):
             if st.session_state.selected_comp not in sorted_components:
                 sorted_components.insert(0, st.session_state.selected_comp)
 
+    # sync_state()
+    
     with st.container():
         st.markdown("### Select Input Component")
         st.caption("Choose or type a single character to explore its related characters.")
@@ -323,6 +334,8 @@ def render_controls(component_map):
                 help="Filter input components by the structure of the character (IDC)."
             )
 
+        sync_state()
+    
     # 🔽 Reset button in a new row, full-width or centered
     with st.container():
         st.button("Reset Filters",
