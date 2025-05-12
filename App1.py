@@ -237,6 +237,8 @@ def sync_state():
 
 
 def render_controls(component_map):
+
+    sync_state()
     
     idc_descriptions = {
         "No Filter": "No Filter",
@@ -278,7 +280,7 @@ def render_controls(component_map):
             if st.session_state.selected_comp not in sorted_components:
                 sorted_components.insert(0, st.session_state.selected_comp)
 
-    sync_state()
+    # sync_state()
     
     with st.container():
         st.markdown("### Select Input Component")
