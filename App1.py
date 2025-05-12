@@ -237,21 +237,19 @@ def render_controls(component_map):
                 get_stroke_count(comp) > 1
             ]
             sorted_components = sorted(filtered_components, key=get_stroke_count)
-            if st.session_state.selected_comp not in sorted_components and st.session_state.selected_comp in component_map:
-                sorted_components.insert(0, st.session_state.selected_comp)
-            # Ensure the selectbox reflects the current selected_comp
-            try:
-                selected_index = sorted_components.index(st.session_state.selected_comp)
-            except ValueError:
-                # If selected_comp is not in the filtered list, reset to the first valid option
-                st.session_state.selected_comp = sorted_components[0] if sorted_components else ""
-                st.session_state.text_input_comp = st.session_state.selected_comp
-                selected_index = 0
+            # Ensure selected_comp is valid; if not, reset to first valid option or empty string
+            if st.session_state.selected_comp not in sorted_components and sorted_components:
+                st.session_state.selected_comp = sorted_components[0]
+                st.session_state.text_input_comp = sorted_components[0]
+            elif not sorted_components:
+                st.session_state.selected_comp = ""
+                st.session_state.text_input_comp = ""
+                st.warning("No components match the current filters. Please adjust the stroke count or IDC filters.")
 
             st.selectbox(
                 "Select a component:",
                 options=sorted_components,
-                index=selected_index,
+                value=st.session_state.selected_comp,
                 format_func=lambda c: (
                     f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
                     f"{char_decomp.get(c, {}).get('decomposition', '—')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
