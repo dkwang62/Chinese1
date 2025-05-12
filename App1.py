@@ -285,14 +285,14 @@ def render_controls(component_map):
             st.text_input("Or type:", key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
 
         with col4:
-            st.selectbox("Strokes:", options=[0] + stroke_counts,
+            st.selectbox("Filter by Strokes:", options=[0] + stroke_counts,
                 key="stroke_count",
                 help="Filter input components by their stroke count. Select 0 for no filter.")
 
         with col5:
             component_idc_options = ["No Filter"] + sorted(idc_descriptions.keys() - {"No Filter"})
             st.selectbox(
-                "Structure IDC:",
+                "Filter by Structure IDC:",
                 options=component_idc_options,
                 format_func=lambda x: x if x == "No Filter" else f"{x} ({idc_descriptions[x]})",
                 key="component_idc",
@@ -301,7 +301,7 @@ def render_controls(component_map):
 
     # 🔽 Reset button in a new row, full-width or centered
     with st.container():
-        st.button("Reset Filters", on_click=on_reset_filters, help="Clear all filters and show all components.")
+        st.button("Reset Filters for Strokes and IDC", on_click=on_reset_filters, help="Clear all filters and show all components.")
 
 
     with st.container():
