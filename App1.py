@@ -219,7 +219,7 @@ def render_controls(component_map):
     with st.container():
         st.markdown("### Select Input Component")
         st.caption("Choose or type a single character to explore its related characters.")
-        col1, col2, col3, col4, col5 = st.columns([1.5, 0.2, 0.2,0.3,0.9 ])
+        col1, col2, col3, col4, col5 = st.columns([1.5, 0.2, 0.2,0.4,0.9 ])
         with col1:
             stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
             component_idc_options = {"No Filter"}
