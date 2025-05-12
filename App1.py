@@ -223,6 +223,9 @@ def render_controls(component_map):
         "⿻": "Overlaid"
     }
 
+    # Debug: Display number of components with radicals
+    st.write(f"Debug: {len([comp for comp in component_map if char_decomp.get(comp, {}).get('radical', '')])} components have a radical")
+
     # Filter row for component input filters
     with st.container():
         st.markdown("### Component Filters")
@@ -242,8 +245,7 @@ def render_controls(component_map):
         with col2:
             pre_filtered_components = [
                 comp for comp in component_map
-                if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
-                get_stroke_count(comp) > 1
+                if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count)
             ]
             radicals = {"No Filter"} | {
                 char_decomp.get(comp, {}).get("radical", "")
@@ -262,8 +264,7 @@ def render_controls(component_map):
             pre_filtered_components = [
                 comp for comp in component_map
                 if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
-                (st.session_state.radical == "No Filter" or char_decomp.get(comp, {}).get("radical", "") == st.session_state.radical) and
-                get_stroke_count(comp) > 1
+                (st.session_state.radical == "No Filter" or char_decomp.get(comp, {}).get("radical", "") == st.session_state.radical)
             ]
             component_idc_options = {"No Filter"} | {
                 char_decomp.get(comp, {}).get("decomposition", "")[0]
@@ -314,6 +315,7 @@ def render_controls(component_map):
                     format_func=lambda c: (
                         f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
                         f"{char_decomp.get(c, {}).get('decomposition', '—')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
+                        f"Radical: {clean_field(char_decomp.get(c, {}).get('radical', '—'))}, "
                         f"{get_stroke_count(c)} strokes, {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
                     ),
                     key="selected_comp",
@@ -369,7 +371,7 @@ def render_char_card(char, compounds):
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Definition": clean_field(entry.get("definition", "No definition available")),
-        "Radical": clean_field(entry.get(" radical", "—")),
+        "Radical": clean_field(entry.get("radical", "—")),
         "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
         "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
         "IDC": idc
