@@ -227,14 +227,15 @@ import streamlit as st
 
 def sync_state():
     """
-    If the text input and dropdown are mismatched, update the input to match
-    and rerun the app safely.
+    Marks that a sync is needed between dropdown and text input.
+    The actual update will be done later, outside widget rendering.
     """
-    if "selected_comp" in st.session_state and "text_input_comp" in st.session_state:
-        if st.session_state.text_input_comp != st.session_state.selected_comp:
-            st.session_state.text_input_comp = st.session_state.selected_comp
-            st.experimental_rerun()
-
+    if (
+        "selected_comp" in st.session_state and
+        "text_input_comp" in st.session_state and
+        st.session_state.text_input_comp != st.session_state.selected_comp
+    ):
+        st.session_state.needs_sync = True
 
 def render_controls(component_map):
     
@@ -374,6 +375,11 @@ def render_controls(component_map):
             st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"],
                      key="display_mode",
                      help="Choose 'Single Character' to view characters without compounds, or select a phrase length to view compounds.")
+
+def apply_state_sync():
+    if st.session_state.get("needs_sync", False):
+        st.session_state.text_input_comp = st.session_state.selected_comp
+        st.session_state.needs_sync = False
 
 def render_char_card(char, compounds):
     entry = char_decomp.get(char, {})
