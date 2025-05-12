@@ -277,8 +277,6 @@ def render_controls(component_map):
             sorted_components = sorted(filtered_components, key=get_stroke_count)
             if st.session_state.selected_comp not in sorted_components:
                 sorted_components.insert(0, st.session_state.selected_comp)
-
-    sync_state()
     
     with st.container():
         st.markdown("### Select Input Component")
@@ -319,6 +317,7 @@ def render_controls(component_map):
                 ),
                 key="selected_comp",
                 on_change=on_selectbox_change
+                sync_state()
             )
 
         with col2:
