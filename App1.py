@@ -240,6 +240,33 @@ def render_controls(component_map):
             if st.session_state.selected_comp not in sorted_components:
                 sorted_components.insert(0, st.session_state.selected_comp)
 
+    with st.container():
+        st.markdown("### Select Input Component")
+        st.caption("Choose or type a single character to explore its related characters.")
+
+        col1, col2, col4, col5 = st.columns([1.5, 0.2, 0.4, 0.9])
+
+        with col1:
+            # Component select logic
+            stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
+            component_idc_options = {"No Filter"}
+            for comp in component_map:
+                decomposition = char_decomp.get(comp, {}).get("decomposition", "")
+                if decomposition and len(decomposition) > 0 and decomposition[0] in idc_chars:
+                    component_idc_options.add(decomposition[0])
+            component_idc_options = sorted(list(component_idc_options))
+
+            filtered_components = [
+                comp for comp in component_map
+                if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
+                (st.session_state.component_idc == "No Filter" or
+                char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc)) and
+                (st.session_state.stroke_count == 0 or get_stroke_count(comp) > 1)
+            ]
+            sorted_components = sorted(filtered_components, key=get_stroke_count)
+            if st.session_state.selected_comp not in sorted_components:
+                sorted_components.insert(0, st.session_state.selected_comp)
+
             st.selectbox(
                 "Select a component:",
                 options=sorted_components,
@@ -257,23 +284,25 @@ def render_controls(component_map):
         with col2:
             st.text_input("Or type:", key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
 
-        with col3:
-            st.button("Reset", on_click=on_reset_filters, help="Show all components in the dropdown by clearing stroke count and IDC filters.")
         with col4:
             st.selectbox("Strokes:", options=[0] + stroke_counts,
-             #   index=0 if st.session_state.stroke_count == 0 else stroke_counts.index(st.session_state.stroke_count) + 1,
                 key="stroke_count",
                 help="Filter input components by their stroke count. Select 0 for no filter.")
+
         with col5:
             component_idc_options = ["No Filter"] + sorted(idc_descriptions.keys() - {"No Filter"})
             st.selectbox(
                 "Structure IDC:",
                 options=component_idc_options,
                 format_func=lambda x: x if x == "No Filter" else f"{x} ({idc_descriptions[x]})",
-            #    index=component_idc_options.index(st.session_state.component_idc),
                 key="component_idc",
                 help="Filter input components by the structure of the character (IDC)."
             )
+
+    # 🔽 Reset button in a new row, full-width or centered
+    with st.container():
+        st.button("Reset Filters", on_click=on_reset_filters, help="Clear all filters and show all components.")
+
 
     with st.container():
         st.markdown("### Filter Output Characters")
