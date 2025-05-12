@@ -239,10 +239,19 @@ def render_controls(component_map):
             sorted_components = sorted(filtered_components, key=get_stroke_count)
             if st.session_state.selected_comp not in sorted_components and st.session_state.selected_comp in component_map:
                 sorted_components.insert(0, st.session_state.selected_comp)
+            # Ensure the selectbox reflects the current selected_comp
+            try:
+                selected_index = sorted_components.index(st.session_state.selected_comp)
+            except ValueError:
+                # If selected_comp is not in the filtered list, reset to the first valid option
+                st.session_state.selected_comp = sorted_components[0] if sorted_components else ""
+                st.session_state.text_input_comp = st.session_state.selected_comp
+                selected_index = 0
 
             st.selectbox(
                 "Select a component:",
                 options=sorted_components,
+                index=selected_index,
                 format_func=lambda c: (
                     f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
                     f"{char_decomp.get(c, {}).get('decomposition', '—')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
