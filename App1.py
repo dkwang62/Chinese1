@@ -223,13 +223,18 @@ def is_reset_needed():
         st.session_state.selected_comp != st.session_state.text_input_comp
     )
 
+import streamlit as st
+
 def sync_state():
     """
-    Keeps selected_comp and text_input_comp in sync.
-    Always makes text_input reflect the dropdown (selected_comp).
+    If the text input and dropdown are mismatched, update the input to match
+    and rerun the app safely.
     """
-    if st.session_state.get("text_input_comp") != st.session_state.get("selected_comp"):
-        st.session_state.text_input_comp = st.session_state.selected_comp
+    if "selected_comp" in st.session_state and "text_input_comp" in st.session_state:
+        if st.session_state.text_input_comp != st.session_state.selected_comp:
+            st.session_state.text_input_comp = st.session_state.selected_comp
+            st.experimental_rerun()
+
 
 def render_controls(component_map):
     
@@ -273,7 +278,7 @@ def render_controls(component_map):
             if st.session_state.selected_comp not in sorted_components:
                 sorted_components.insert(0, st.session_state.selected_comp)
 
-    # sync_state()
+    sync_state()
     
     with st.container():
         st.markdown("### Select Input Component")
@@ -334,7 +339,7 @@ def render_controls(component_map):
                 help="Filter input components by the structure of the character (IDC)."
             )
 
-        sync_state()
+
     
     # 🔽 Reset button in a new row, full-width or centered
     with st.container():
