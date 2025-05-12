@@ -231,9 +231,30 @@ def render_controls(component_map):
 
         with col1:
             stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
-            st.selectbox("Filter by Strokes:", options=[0] + stroke_counts, key="stroke_count")
+            st.selectbox(
+                "Filter by Strokes:",
+                options=[0] + stroke_counts,
+                key="stroke_count",
+                format_func=lambda x: "No Filter" if x == 0 else str(x),
+                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
+            )
 
         with col2:
+            radicals = {"No Filter"} | {
+                char_decomp.get(comp, {}).get("radical", "")
+                for comp in component_map
+                if char_decomp.get(comp, {}).get("radical", "") and
+                (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count)
+            }
+            radical_options = ["No Filter"] + sorted(radicals - {"No Filter"})
+            st.selectbox(
+                "Filter by Radical:",
+                options=radical_options,
+                key="radical",
+                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
+            )
+
+        with col3:
             filtered_components = [
                 comp for comp in component_map
                 if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
@@ -242,19 +263,6 @@ def render_controls(component_map):
                  char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc)) and
                 get_stroke_count(comp) > 1
             ]
-            radicals = {"No Filter"} | {
-                char_decomp.get(comp, {}).get("radical", "")
-                for comp in filtered_components
-                if char_decomp.get(comp, {}).get("radical", "")
-            }
-            radical_options = ["No Filter"] + sorted(radicals - {"No Filter"})
-            st.selectbox(
-                "Filter by Radical:",
-                options=radical_options,
-                key="radical"
-            )
-
-        with col3:
             component_idc_options = {"No Filter"} | {
                 char_decomp.get(comp, {}).get("decomposition", "")[0]
                 for comp in filtered_components
@@ -265,7 +273,8 @@ def render_controls(component_map):
                 "Filter by Structure IDC:",
                 options=component_idc_options,
                 format_func=lambda x: f"{x} ({idc_descriptions[x]})" if x != "No Filter" else x,
-                key="component_idc"
+                key="component_idc",
+                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
             )
 
     # Input row for component selection
@@ -324,7 +333,8 @@ def render_controls(component_map):
                 options=idc_options,
                 format_func=lambda x: f"{x} ({idc_descriptions.get(x, x)})" if x != "No Filter" else x,
                 index=idc_options.index(st.session_state.selected_idc) if st.session_state.selected_idc in idc_options else 0,
-                key="selected_idc"
+                key="selected_idc",
+                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
             )
         with col7:
             output_radicals = {"No Filter"} | {
@@ -336,7 +346,8 @@ def render_controls(component_map):
             st.selectbox(
                 "Result Radical:",
                 options=output_radical_options,
-                key="output_radical"
+                key="output_radical",
+                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
             )
         with col8:
             st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"], key="display_mode")
