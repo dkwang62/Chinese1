@@ -240,11 +240,15 @@ def render_controls(component_map):
             )
 
         with col2:
+            pre_filtered_components = [
+                comp for comp in component_map
+                if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
+                get_stroke_count(comp) > 1
+            ]
             radicals = {"No Filter"} | {
                 char_decomp.get(comp, {}).get("radical", "")
-                for comp in component_map
-                if char_decomp.get(comp, {}).get("radical", "") and
-                (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count)
+                for comp in pre_filtered_components
+                if char_decomp.get(comp, {}).get("radical", "")
             }
             radical_options = ["No Filter"] + sorted(radicals - {"No Filter"})
             st.selectbox(
@@ -255,17 +259,15 @@ def render_controls(component_map):
             )
 
         with col3:
-            filtered_components = [
+            pre_filtered_components = [
                 comp for comp in component_map
                 if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
                 (st.session_state.radical == "No Filter" or char_decomp.get(comp, {}).get("radical", "") == st.session_state.radical) and
-                (st.session_state.component_idc == "No Filter" or
-                 char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc)) and
                 get_stroke_count(comp) > 1
             ]
             component_idc_options = {"No Filter"} | {
                 char_decomp.get(comp, {}).get("decomposition", "")[0]
-                for comp in filtered_components
+                for comp in pre_filtered_components
                 if char_decomp.get(comp, {}).get("decomposition", "") and char_decomp.get(comp, {}).get("decomposition", "")[0] in IDC_CHARS
             }
             component_idc_options = ["No Filter"] + sorted(component_idc_options - {"No Filter"})
@@ -284,6 +286,14 @@ def render_controls(component_map):
         col4, col5 = st.columns([1.5, 0.2])
 
         with col4:
+            filtered_components = [
+                comp for comp in component_map
+                if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
+                (st.session_state.radical == "No Filter" or char_decomp.get(comp, {}).get("radical", "") == st.session_state.radical) and
+                (st.session_state.component_idc == "No Filter" or
+                 char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc)) and
+                get_stroke_count(comp) > 1
+            ]
             sorted_components = sorted(filtered_components, key=get_stroke_count)
             selectbox_index = 0
             if sorted_components:
@@ -359,7 +369,7 @@ def render_char_card(char, compounds):
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Definition": clean_field(entry.get("definition", "No definition available")),
-        "Radical": clean_field(entry.get("radical", "—")),
+        "Radical": clean_field(entry.get(" radical", "—")),
         "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
         "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
         "IDC": idc
