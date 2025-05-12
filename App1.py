@@ -194,10 +194,34 @@ def on_output_char_select(component_map):
         st.session_state.page = 1
 
 def on_reset_filters():
+    # Clear filters
     st.session_state.stroke_count = 0
     st.session_state.component_idc = "No Filter"
-    st.session_state.idc_refresh = not st.session_state.idc_refresh
+    st.session_state.selected_idc = "No Filter"
+
+    # Restore the last selected component explicitly (even if filters hid it)
+    last_selected = st.session_state.selected_comp or st.session_state.previous_selected_comp or ""
+    if last_selected and last_selected in char_decomp:
+        st.session_state.selected_comp = last_selected
+        st.session_state.text_input_comp = last_selected
+        st.session_state.previous_selected_comp = last_selected
+    else:
+        # Fallback if needed
+        fallback = next(iter(char_decomp), "")
+        st.session_state.selected_comp = fallback
+        st.session_state.text_input_comp = fallback
+        st.session_state.previous_selected_comp = fallback
+
     st.session_state.page = 1
+    st.session_state.idc_refresh = not st.session_state.idc_refresh
+
+def is_reset_needed():
+    return (
+        st.session_state.stroke_count != 0 or
+        st.session_state.component_idc != "No Filter" or
+        st.session_state.selected_idc != "No Filter" or
+        st.session_state.selected_comp != st.session_state.text_input_comp
+    )
 
 def render_controls(component_map):
     idc_descriptions = {
@@ -301,7 +325,11 @@ def render_controls(component_map):
 
     # 🔽 Reset button in a new row, full-width or centered
     with st.container():
-        st.button("Reset Filters for Strokes and IDC", on_click=on_reset_filters, help="Clear all filters and show all components.")
+        st.button("Reset Filters",
+            on_click=on_reset_filters,
+            help="Clear all filters and resync dropdown and input.",
+            disabled=not is_reset_needed()
+        )
 
 
     with st.container():
