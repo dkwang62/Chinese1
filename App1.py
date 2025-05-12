@@ -258,7 +258,7 @@ def render_controls(component_map):
             st.text_input("Or type:", key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
 
         with col3:
-            st.button("Reset Strokes & IDC", on_click=on_reset_filters, help="Show all components in the dropdown by clearing stroke count and IDC filters.")
+            st.button("Reset", on_click=on_reset_filters, help="Show all components in the dropdown by clearing stroke count and IDC filters.")
         with col4:
             st.selectbox("Strokes:", options=[0] + stroke_counts,
              #   index=0 if st.session_state.stroke_count == 0 else stroke_counts.index(st.session_state.stroke_count) + 1,
@@ -267,7 +267,7 @@ def render_controls(component_map):
         with col5:
             component_idc_options = ["No Filter"] + sorted(idc_descriptions.keys() - {"No Filter"})
             st.selectbox(
-                "Component structure (IDC):",
+                "Structure IDC:",
                 options=component_idc_options,
                 format_func=lambda x: x if x == "No Filter" else f"{x} ({idc_descriptions[x]})",
             #    index=component_idc_options.index(st.session_state.component_idc),
