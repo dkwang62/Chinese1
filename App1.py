@@ -94,7 +94,6 @@ def init_session_state():
         "selected_idc": selected_config["selected_idc"],
         "component_idc": selected_config["component_idc"],
         "output_radical": selected_config["output_radical"],
-        "idc_refresh": False,
         "text_input_comp": selected_config["selected_comp"],
         "page": 1,
         "results_per_page": 50,
@@ -158,20 +157,20 @@ def on_text_input_change(component_map):
     text_value = st.session_state.text_input_comp.strip()
     if len(text_value) != 1:
         st.warning("Please enter exactly one character.")
+        st.session_state.text_input_comp = ""
         return
     if text_value in component_map or text_value in char_decomp:
         st.session_state.previous_selected_comp = st.session_state.selected_comp
         st.session_state.selected_comp = text_value
         st.session_state.page = 1
-        st.session_state.idc_refresh = not st.session_state.idc_refresh
+        st.session_state.text_input_comp = text_value
     else:
         st.warning("Invalid character. Please enter a valid component.")
-        st.session_state.text_input_comp = st.session_state.selected_comp
+        st.session_state.text_input_comp = ""
 
 def on_selectbox_change():
     st.session_state.previous_selected_comp = st.session_state.selected_comp
     st.session_state.page = 1
-    st.session_state.idc_refresh = not st.session_state.idc_refresh
     st.session_state.text_input_comp = st.session_state.selected_comp
 
 def on_output_char_select(component_map):
@@ -185,7 +184,6 @@ def on_output_char_select(component_map):
     st.session_state.selected_comp = selected_char
     st.session_state.text_input_comp = selected_char
     st.session_state.page = 1
-    st.session_state.idc_refresh = not st.session_state.idc_refresh
 
 def on_reset_filters():
     st.session_state.stroke_count = 0
@@ -193,9 +191,8 @@ def on_reset_filters():
     st.session_state.component_idc = "No Filter"
     st.session_state.selected_idc = "No Filter"
     st.session_state.output_radical = "No Filter"
-    st.session_state.text_input_comp = st.session_state.selected_comp
+    st.session_state.text_input_comp = ""
     st.session_state.page = 1
-    st.session_state.idc_refresh = not st.session_state.idc_refresh
 
 def is_reset_needed():
     return (
@@ -238,8 +235,7 @@ def render_controls(component_map):
                 "Filter by Strokes:",
                 options=[0] + stroke_counts,
                 key="stroke_count",
-                format_func=lambda x: "No Filter" if x == 0 else str(x),
-                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
+                format_func=lambda x: "No Filter" if x == 0 else str(x)
             )
 
         with col2:
@@ -256,8 +252,7 @@ def render_controls(component_map):
             st.selectbox(
                 "Filter by Radical:",
                 options=radical_options,
-                key="radical",
-                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
+                key="radical"
             )
 
         with col3:
@@ -276,8 +271,7 @@ def render_controls(component_map):
                 "Filter by Structure IDC:",
                 options=component_idc_options,
                 format_func=lambda x: f"{x} ({idc_descriptions[x]})" if x != "No Filter" else x,
-                key="component_idc",
-                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
+                key="component_idc"
             )
 
     # Input row for component selection
@@ -323,7 +317,31 @@ def render_controls(component_map):
                 )
 
         with col5:
-            st.text_input("Or type:", key="text_input_comp", on_change=on_text_input_change, args=(component_map,))
+            st.text_input(
+                "Or type:",
+                value=st.session_state.text_input_comp,
+                key="text_input_comp",
+                on_change=on_text_input_change,
+                args=(component_map,),
+                placeholder="Enter one Chinese character"
+            )
+
+    # JavaScript to handle paste events
+    components.html("""
+        <script>
+            let debounceTimeout = null;
+            document.addEventListener('paste', function(e) {
+                clearTimeout(debounceTimeout);
+                const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+                const input = document.querySelector('input[data-testid="stTextInput"]');
+                if (input) {
+                    input.value = text;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        </script>
+    """, height=0)
 
     with st.container():
         st.button("Reset Filters", on_click=on_reset_filters, disabled=not is_reset_needed())
@@ -345,8 +363,7 @@ def render_controls(component_map):
                 options=idc_options,
                 format_func=lambda x: f"{x} ({idc_descriptions.get(x, x)})" if x != "No Filter" else x,
                 index=idc_options.index(st.session_state.selected_idc) if st.session_state.selected_idc in idc_options else 0,
-                key="selected_idc",
-                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
+                key="selected_idc"
             )
         with col7:
             output_radicals = {"No Filter"} | {
@@ -358,8 +375,7 @@ def render_controls(component_map):
             st.selectbox(
                 "Result Radical:",
                 options=output_radical_options,
-                key="output_radical",
-                on_change=lambda: st.session_state.update(idc_refresh=not st.session_state.idc_refresh)
+                key="output_radical"
             )
         with col8:
             st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"], key="display_mode")
