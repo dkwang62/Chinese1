@@ -1,5 +1,5 @@
 Fix Streamlit app where typing a character (e.g., '栗') doesn't persist in the input box or sync with the dropdown, and IDC/radical filters need multiple selections to update. Ensure: typing a character shows it in both input box and dropdown, resets component filters (stroke count, radical, IDC), and updates UI; dropdown selection overrides input box; filters update with one selection. Sync input box and dropdown to show the same character. Add debug output to track session state.
-
+Fix Streamlit app where the output dropdown ("Select a character from the list below:") is restricted by component filters (stroke count, radical, IDC). Ensure output dropdown shows all characters containing the selected component, filtered only by output IDC, radical, and display mode. Preserve filter reset on typing for latest code.
 
 Triggers Solution:
 Resets filters in on_text_input_change:
