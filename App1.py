@@ -167,10 +167,6 @@ def on_text_input_change(component_map):
         st.session_state.previous_selected_comp = st.session_state.selected_comp
         st.session_state.selected_comp = text_value
         st.session_state.text_input_comp = text_value
-        # Reset component filters
-        st.session_state.stroke_count = 0
-        st.session_state.radical = "No Filter"
-        st.session_state.component_idc = "No Filter"
         st.session_state.page = 1
     else:
         st.warning("Invalid character. Please enter a valid component.")
@@ -311,10 +307,11 @@ def render_controls(component_map):
             sorted_components = sorted(filtered_components, key=get_stroke_count)
             selectbox_index = 0
             if sorted_components:
-                # Only reset if selected_comp is invalid and input box is empty or matches selected_comp
+                # Only reset if selected_comp is invalid, no typed input exists, and component_map doesn't have the current selected_comp
                 if (st.session_state.selected_comp not in sorted_components and
                     (not st.session_state.text_input_comp or
-                     st.session_state.text_input_comp == st.session_state.selected_comp)):
+                     st.session_state.text_input_comp == st.session_state.selected_comp) and
+                    not component_map.get(st.session_state.selected_comp)):
                     st.session_state.selected_comp = sorted_components[0]
                     st.session_state.text_input_comp = sorted_components[0]
                     st.session_state.debug_info += f"; Reset selected_comp to '{sorted_components[0]}' due to filters"
@@ -442,6 +439,7 @@ def main():
     details = " ".join(f"<strong>{k}:</strong> {v}" for k, v in fields.items())
     st.markdown(f"""<div class='selected-card'><h2 class='selected-char'>{st.session_state.selected_comp}</h2><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
 
+    # Compute output characters without component filter influence
     chars = [c for c in component_map.get(st.session_state.selected_comp, []) if c in char_decomp]
     if st.session_state.selected_idc != "No Filter":
         chars = [c for c in chars if char_decomp.get(c, {}).get("decomposition", "").startswith(st.session_state.selected_idc)]
