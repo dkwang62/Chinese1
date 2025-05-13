@@ -155,17 +155,22 @@ def build_component_map(max_depth=5):
 
 def on_text_input_change(component_map):
     text_value = st.session_state.text_input_comp.strip()
+    st.session_state.setdefault("debug_info", "")
+    st.session_state.debug_info = f"Input received: '{text_value}'"
     if len(text_value) != 1:
         st.warning("Please enter exactly one character.")
         st.session_state.text_input_comp = ""
+        st.session_state.debug_info += "; Invalid length"
         return
     if text_value in component_map or text_value in char_decomp:
+        st.session_state.debug_info += f"; Valid component '{text_value}'"
         st.session_state.previous_selected_comp = st.session_state.selected_comp
         st.session_state.selected_comp = text_value
         st.session_state.page = 1
         st.session_state.text_input_comp = text_value
     else:
         st.warning("Invalid character. Please enter a valid component.")
+        st.session_state.debug_info += f"; Invalid component '{text_value}'"
         st.session_state.text_input_comp = ""
 
 def on_selectbox_change():
@@ -220,8 +225,12 @@ def render_controls(component_map):
         "⿻": "Overlaid"
     }
 
-    # Debug: Display number of components with radicals
+    # Debug: Display number of components with radicals and input state
     st.write(f"Debug: {len([comp for comp in component_map if char_decomp.get(comp, {}).get('radical', '')])} components have a radical")
+    with st.expander("Debug Info"):
+        st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
+        st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
+        st.write(st.session_state.get("debug_info", ""))
 
     # Filter row for component input filters
     with st.container():
