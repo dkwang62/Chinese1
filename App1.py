@@ -167,6 +167,10 @@ def on_text_input_change(component_map):
         st.session_state.previous_selected_comp = st.session_state.selected_comp
         st.session_state.selected_comp = text_value
         st.session_state.text_input_comp = text_value
+        # Reset component filters
+        st.session_state.stroke_count = 0
+        st.session_state.radical = "No Filter"
+        st.session_state.component_idc = "No Filter"
         st.session_state.page = 1
     else:
         st.warning("Invalid character. Please enter a valid component.")
@@ -233,6 +237,9 @@ def render_controls(component_map):
     with st.expander("Debug Info"):
         st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
         st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
+        st.write(f"Stroke count: {st.session_state.get('stroke_count', 0)}")
+        st.write(f"Radical: {st.session_state.get('radical', 'No Filter')}")
+        st.write(f"Structure IDC: {st.session_state.get('component_idc', 'No Filter')}")
         st.write(st.session_state.get("debug_info", ""))
 
     # Filter row for component input filters
