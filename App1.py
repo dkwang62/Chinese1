@@ -98,7 +98,6 @@ def init_session_state():
         "page": 1,
         "results_per_page": 50,
         "previous_selected_comp": selected_config["selected_comp"],
-        "is_typed_input": False,
         "debug_info": ""
     }
     for key, value in defaults.items():
@@ -161,7 +160,6 @@ def on_text_input_change(component_map):
     if len(text_value) != 1:
         st.warning("Please enter exactly one character.")
         st.session_state.text_input_comp = ""
-        st.session_state.is_typed_input = False
         st.session_state.debug_info += "; Invalid length"
         return
     if text_value in component_map or text_value in char_decomp:
@@ -169,19 +167,16 @@ def on_text_input_change(component_map):
         st.session_state.previous_selected_comp = st.session_state.selected_comp
         st.session_state.selected_comp = text_value
         st.session_state.text_input_comp = text_value
-        st.session_state.is_typed_input = True
         st.session_state.page = 1
     else:
         st.warning("Invalid character. Please enter a valid component.")
         st.session_state.debug_info += f"; Invalid component '{text_value}'"
         st.session_state.text_input_comp = ""
-        st.session_state.is_typed_input = False
 
 def on_selectbox_change():
     st.session_state.previous_selected_comp = st.session_state.selected_comp
-    st.session_state.page = 1
     st.session_state.text_input_comp = st.session_state.selected_comp
-    st.session_state.is_typed_input = False
+    st.session_state.page = 1
     st.session_state.debug_info = f"Selectbox changed to '{st.session_state.selected_comp}'"
 
 def on_output_char_select(component_map):
@@ -194,7 +189,6 @@ def on_output_char_select(component_map):
     st.session_state.previous_selected_comp = st.session_state.selected_comp
     st.session_state.selected_comp = selected_char
     st.session_state.text_input_comp = selected_char
-    st.session_state.is_typed_input = False
     st.session_state.page = 1
     st.session_state.debug_info = f"Output char selected: '{selected_char}'"
 
@@ -205,7 +199,6 @@ def on_reset_filters():
     st.session_state.selected_idc = "No Filter"
     st.session_state.output_radical = "No Filter"
     st.session_state.text_input_comp = ""
-    st.session_state.is_typed_input = False
     st.session_state.page = 1
     st.session_state.debug_info = "Filters reset"
 
@@ -240,7 +233,6 @@ def render_controls(component_map):
     with st.expander("Debug Info"):
         st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
         st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
-        st.write(f"Is typed input: {st.session_state.get('is_typed_input', False)}")
         st.write(st.session_state.get("debug_info", ""))
 
     # Filter row for component input filters
@@ -312,17 +304,17 @@ def render_controls(component_map):
             sorted_components = sorted(filtered_components, key=get_stroke_count)
             selectbox_index = 0
             if sorted_components:
-                # Only reset selected_comp if not a typed input and current selected_comp is invalid
-                if (not st.session_state.is_typed_input and
-                    st.session_state.selected_comp not in sorted_components):
+                # Only reset if selected_comp is invalid and input box is empty or matches selected_comp
+                if (st.session_state.selected_comp not in sorted_components and
+                    (not st.session_state.text_input_comp or
+                     st.session_state.text_input_comp == st.session_state.selected_comp)):
                     st.session_state.selected_comp = sorted_components[0]
                     st.session_state.text_input_comp = sorted_components[0]
                     st.session_state.debug_info += f"; Reset selected_comp to '{sorted_components[0]}' due to filters"
                 selectbox_index = sorted_components.index(st.session_state.selected_comp) if st.session_state.selected_comp in sorted_components else 0
             else:
                 st.session_state.selected_comp = ""
-                if not st.session_state.is_typed_input:
-                    st.session_state.text_input_comp = ""
+                st.session_state.text_input_comp = ""
                 st.warning("No components match the current filters. Please adjust the stroke count, radical, or IDC filters.")
 
             if sorted_components:
