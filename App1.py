@@ -78,12 +78,12 @@ st.markdown("""
 # Initialize session state
 def init_session_state():
     config_options = [
-        {"selected_comp": "爫", "stroke_count": 4, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "Single Character"},
-        {"selected_comp": "心", "stroke_count": 4, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "⿱", "output_radical": "No Filter", "display_mode": "2-Character Phrases"},
-        {"selected_comp": "⺌", "stroke_count": 3, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "3-Character Phrases"},
-        {"selected_comp": "㐱", "stroke_count": 5, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "Single Character"},
-        {"selected_comp": "覀", "stroke_count": 6, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "2-Character Phrases"},
-        {"selected_comp": "豕", "stroke_count": 7, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "⿰", "output_radical": "No Filter", "display_mode": "3-Character Phrases"}
+        {"selected_comp": "爫", "stroke_count": 0, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "Single Character"},
+        {"selected_comp": "心", "stroke_count": 0, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "⿱", "output_radical": "No Filter", "display_mode": "2-Character Phrases"},
+        {"selected_comp": "⺌", "stroke_count": 0, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "3-Character Phrases"},
+        {"selected_comp": "㐱", "stroke_count": 0, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "Single Character"},
+        {"selected_comp": "覀", "stroke_count": 0, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "2-Character Phrases"},
+        {"selected_comp": "豕", "stroke_count": 0, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "⿰", "output_radical": "No Filter", "display_mode": "3-Character Phrases"}
     ]
     selected_config = random.choice(config_options)
     defaults = {
@@ -124,6 +124,12 @@ def get_stroke_count(char):
 
 def clean_field(field):
     return field[0] if isinstance(field, list) and field else field or "—"
+
+def get_etymology_text(entry):
+    etymology = entry.get("etymology", {})
+    hint = clean_field(etymology.get("hint", "No hint available"))
+    details = clean_field(etymology.get("details", ""))
+    return f"{hint}{'; Details: ' + details if details and details != '—' else ''}"
 
 def get_all_components(char, max_depth, depth=0, seen=None):
     if seen is None:
@@ -229,7 +235,8 @@ def render_controls(component_map):
     }
 
     # Debug: Display number of components with radicals and input state
-    st.write(f"Debug: {len([comp for comp in component_map if char_decomp.get(comp, {}).get('radical', '')])} components have a radical")
+    radicals = [comp for comp in component_map if char_decomp.get(comp, {}).get("radical", "") == comp]
+    st.write(f"Debug: {len(component_map)} components, {len(radicals)} radicals")
     with st.expander("Debug Info"):
         st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
         st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
@@ -301,13 +308,11 @@ def render_controls(component_map):
                 if (st.session_state.stroke_count == 0 or get_stroke_count(comp) == st.session_state.stroke_count) and
                 (st.session_state.radical == "No Filter" or char_decomp.get(comp, {}).get("radical", "") == st.session_state.radical) and
                 (st.session_state.component_idc == "No Filter" or
-                 char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc)) and
-                get_stroke_count(comp) > 1
+                 char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc))
             ]
             sorted_components = sorted(filtered_components, key=get_stroke_count)
             selectbox_index = 0
             if sorted_components:
-                # Only reset if selected_comp is invalid, no typed input exists, and component_map doesn't have the current selected_comp
                 if (st.session_state.selected_comp not in sorted_components and
                     (not st.session_state.text_input_comp or
                      st.session_state.text_input_comp == st.session_state.selected_comp) and
@@ -327,10 +332,13 @@ def render_controls(component_map):
                     options=sorted_components,
                     index=selectbox_index,
                     format_func=lambda c: (
-                        f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
-                        f"{char_decomp.get(c, {}).get('decomposition', '—')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
+                        c if c == "Select a component..." else
+                        f"{c} (Pinyin: {clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
+                        f"Strokes: {get_stroke_count(c) if get_stroke_count(c) != -1 else 'unknown'}, "
                         f"Radical: {clean_field(char_decomp.get(c, {}).get('radical', '—'))}, "
-                        f"{get_stroke_count(c)} strokes, {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
+                        f"IDC: {char_decomp.get(c, {}).get('decomposition', '')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
+                        f"Definition: {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))}, "
+                        f"Etymology: {get_etymology_text(char_decomp.get(c, {}))})"
                     ),
                     key="selected_comp",
                     on_change=on_selectbox_change
@@ -406,11 +414,11 @@ def render_char_card(char, compounds):
     idc = decomposition[0] if decomposition and decomposition[0] in IDC_CHARS else "—"
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
-        "Definition": clean_field(entry.get("definition", "No definition available")),
-        "Radical": clean_field(entry.get("radical", "—")),
-        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
         "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
-        "IDC": idc
+        "Radical": clean_field(entry.get("radical", "—")),
+        "IDC": idc,
+        "Definition": clean_field(entry.get("definition", "No definition available")),
+        "Etymology": get_etymology_text(entry)
     }
     details = " ".join(f"<strong>{k}:</strong> {v}" for k, v in fields.items())
     st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
@@ -431,10 +439,11 @@ def main():
     entry = char_decomp.get(st.session_state.selected_comp, {})
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
-        "Definition": clean_field(entry.get("definition", "No definition available")),
+        "Strokes": f"{get_stroke_count(st.session_state.selected_comp)} strokes" if get_stroke_count(st.session_state.selected_comp) != -1 else "unknown strokes",
         "Radical": clean_field(entry.get("radical", "—")),
-        "Hint": clean_field(entry.get("etymology", {}).get("hint", "No hint available")),
-        "Strokes": f"{get_stroke_count(st.session_state.selected_comp)} strokes" if get_stroke_count(st.session_state.selected_comp) != -1 else "unknown strokes"
+        "IDC": entry.get("decomposition", "")[0] if entry.get("decomposition", "") and entry.get("decomposition", "")[0] in IDC_CHARS else "—",
+        "Definition": clean_field(entry.get("definition", "No definition available")),
+        "Etymology": get_etymology_text(entry)
     }
     details = " ".join(f"<strong>{k}:</strong> {v}" for k, v in fields.items())
     st.markdown(f"""<div class='selected-card'><h2 class='selected-char'>{st.session_state.selected_comp}</h2><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
@@ -470,8 +479,12 @@ def main():
             args=(component_map,),
             format_func=lambda c: (
                 c if c == "Select a character..." else
-                f"{c} ({clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, {get_stroke_count(c)} strokes, "
-                f"{clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))})"
+                f"{c} (Pinyin: {clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
+                f"Strokes: {get_stroke_count(c) if get_stroke_count(c) != -1 else 'unknown'}, "
+                f"Radical: {clean_field(char_decomp.get(c, {}).get('radical', '—'))}, "
+                f"IDC: {char_decomp.get(c, {}).get('decomposition', '')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
+                f"Definition: {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))}, "
+                f"Etymology: {get_etymology_text(char_decomp.get(c, {}))})"
             )
         )
 
