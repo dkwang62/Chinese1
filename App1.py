@@ -63,6 +63,14 @@ st.markdown("""
     .stButton button:hover {
         background-color: #2980b9;
     }
+    .debug-section {
+        background-color: #f5f5f5;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 20px;
+   .ConcurrentHashMap
+    .diagnostic-message.error { color: #c0392b; }
+    .diagnostic-message.warning { color: #e67e22; }
     @media (max-width: 768px) {
         .selected-card { flex-direction: column; align-items: flex-start; padding: 10px; }
         .selected-char { font-size: 2em; }
@@ -98,7 +106,8 @@ def init_session_state():
         "page": 1,
         "results_per_page": 50,
         "previous_selected_comp": selected_config["selected_comp"],
-        "debug_info": ""
+        "debug_info": "",
+        "diagnostic_messages": []  # Store errors and warnings
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
@@ -111,7 +120,9 @@ def load_char_decomp():
         with open("strokes1.json", "r", encoding="utf-8") as f:
             return {entry["character"]: entry for entry in json.load(f)}
     except Exception as e:
-        st.error(f"Failed to load strokes1.json: {e}")
+        error_msg = f"Failed to load strokes1.json: {e}"
+        st.error(error_msg)
+        st.session_state.diagnostic_messages.append({"type": "error", "message": error_msg})
         return {}
 
 char_decomp = load_char_decomp()
@@ -164,7 +175,8 @@ def on_text_input_change(component_map):
     text_value = st.session_state.text_input_comp.strip()
     st.session_state.debug_info = f"Input received: '{text_value}'"
     if len(text_value) != 1:
-        st.warning("Please enter exactly one character.")
+        warning_msg = "Please enter exactly one character."
+        st.session_state.diagnostic_messages.append({"type": "warning", "message": warning_msg})
         st.session_state.text_input_comp = ""
         st.session_state.debug_info += "; Invalid length"
         return
@@ -175,7 +187,8 @@ def on_text_input_change(component_map):
         st.session_state.text_input_comp = text_value
         st.session_state.page = 1
     else:
-        st.warning("Invalid character. Please enter a valid component.")
+        warning_msg = "Invalid character. Please enter a valid component."
+        st.session_state.diagnostic_messages.append({"type": "warning", "message": warning_msg})
         st.session_state.debug_info += f"; Invalid component '{text_value}'"
         st.session_state.text_input_comp = ""
 
@@ -189,7 +202,8 @@ def on_output_char_select(component_map):
     selected_char = st.session_state.output_char_select
     if selected_char == "Select a character..." or selected_char not in component_map:
         if selected_char != "Select a character...":
-            st.warning("Invalid character selected.")
+            warning_msg = "Invalid character selected."
+            st.session_state.diagnostic_messages.append({"type": "warning", "message": warning_msg})
         st.session_state.output_char_select = "Select a character..."
         return
     st.session_state.previous_selected_comp = st.session_state.selected_comp
@@ -233,17 +247,6 @@ def render_controls(component_map):
         "⿺": "Bottom Left Corner",
         "⿻": "Overlaid"
     }
-
-    # Debug: Display number of components with radicals and input state
-    radicals = [comp for comp in component_map if char_decomp.get(comp, {}).get("radical", "") == comp]
-    st.write(f"Debug: {len(component_map)} components, {len(radicals)} radicals")
-    with st.expander("Debug Info"):
-        st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
-        st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
-        st.write(f"Stroke count: {st.session_state.get('stroke_count', 0)}")
-        st.write(f"Radical: {st.session_state.get('radical', 'No Filter')}")
-        st.write(f"Structure IDC: {st.session_state.get('component_idc', 'No Filter')}")
-        st.write(st.session_state.get("debug_info", ""))
 
     # Filter row for component input filters
     with st.container():
@@ -324,7 +327,8 @@ def render_controls(component_map):
             else:
                 st.session_state.selected_comp = ""
                 st.session_state.text_input_comp = ""
-                st.warning("No components match the current filters. Please adjust the stroke count, radical, or IDC filters.")
+                warning_msg = "No components match the current filters. Please adjust the stroke count, radical, or IDC filters."
+                st.session_state.diagnostic_messages.append({"type": "warning", "message": warning_msg})
 
             if sorted_components:
                 st.selectbox(
@@ -510,6 +514,23 @@ def main():
                 document.execCommand("copy");
                 </script>
             """, height=0)
+
+    # Render debug information and diagnostics at the end
+    radicals = [comp for comp in component_map if char_decomp.get(comp, {}).get("radical", "") == comp]
+    with st.expander("Debug Information (For Developers)", expanded=False):
+        st.markdown("<div class='debug-section'>", unsafe_allow_html=True)
+        st.write(f"Total components: {len(component_map)}, Radicals: {len(radicals)}")
+        st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
+        st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
+        st.write(f"Stroke count: {st.session_state.get('stroke_count', 0)}")
+        st.write(f"Radical: {st.session_state.get('radical', 'No Filter')}")
+        st.write(f"Structure IDC: {st.session_state.get('component_idc', 'No Filter')}")
+        st.write(f"Debug log: {st.session_state.get('debug_info', '')}")
+        st.markdown("### Errors and Warnings")
+        for msg in st.session_state.diagnostic_messages:
+            class_name = 'error' if msg['type'] == 'error' else 'warning'
+            st.markdown(f"<p class='diagnostic-message {class_name}'>{msg['type'].capitalize()}: {msg['message']}</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
