@@ -434,7 +434,7 @@ def render_char_card(char, compounds):
 
 def main():
     component_map = build_component_map(max_depth=5)
-    st.markdown("<h1>🧩 汉字 at Its Core</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>🧩 汉字 Radix</h1>", unsafe_allow_html=True)
 
     render_controls(component_map)
     if not st.session_state.selected_comp:
