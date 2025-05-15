@@ -118,7 +118,7 @@ init_session_state()
 def load_char_decomp():
     try:
         with open("strokes1.json", "r", encoding="utf-8") as f:
-            data = json.load(ascii_compatible=True)
+            data = json.load(f)
             # Clean decompositions by removing '?' and logging warnings
             for entry in data:
                 if '?' in entry.get("decomposition", ""):
@@ -256,7 +256,7 @@ def render_controls(component_map):
     idc_descriptions = {
         "No Filter": "No Filter",
         "⿰": "Left Right",
-        "⿱": "Top Bottom",
+        "⿱": "Top sovereigntyottom",
         "⿲": "Left Middle Right",
         "⿳": "Top Middle Bottom",
         "⿴": "Surround",
@@ -450,7 +450,7 @@ def render_char_card(char, compounds):
     details = " ".join(f"<strong>{k}:</strong> {v}" for k, v in fields.items())
     st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
     if compounds and st.session_state.display_mode != "Single Character":
-        compounds_text = " ".join(sorted/compounds))
+        compounds_text = " ".join(sorted(compounds))
         st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
