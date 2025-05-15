@@ -1,11 +1,8 @@
-# Working on May 16 5AM
-# Works with strokes1.json 
 import json
 import random
 from collections import defaultdict
 import streamlit as st
 import streamlit.components.v1 as components
-import uuid
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -121,7 +118,17 @@ init_session_state()
 def load_char_decomp():
     try:
         with open("strokes1.json", "r", encoding="utf-8") as f:
-            return {entry["character"]: entry for entry in json.load(f)}
+            data = json.load(ascii_compatible=True)
+            # Clean decompositions by removing '?' and logging warnings
+            for entry in data:
+                if '?' in entry.get("decomposition", ""):
+                    char = entry["character"]
+                    st.session_state.diagnostic_messages.append({
+                        "type": "warning",
+                        "message": f"Invalid component '?' in decomposition for {char}: {entry['decomposition']}"
+                    })
+                    entry["decomposition"] = ""
+            return {entry["character"]: entry for entry in data}
     except Exception as e:
         error_msg = f"Failed to load strokes1.json: {e}"
         st.error(error_msg)
@@ -146,10 +153,12 @@ def get_etymology_text(entry):
     return f"{hint}{'; Details: ' + details if details and details != '—' else ''}"
 
 def format_decomposition(char):
-    """Format the decomposition to show full structure instead of IDC alone."""
+    """Format the decomposition to show full structure, ignoring invalid components."""
     decomposition = char_decomp.get(char, {}).get("decomposition", "")
-    if not decomposition or decomposition[0] not in IDC_CHARS:
-        return decomposition or "—"
+    if not decomposition or '?' in decomposition:
+        return "—"
+    if decomposition[0] not in IDC_CHARS:
+        return decomposition
     return decomposition
 
 def get_all_components(char, max_depth, depth=0, seen=None):
@@ -161,11 +170,11 @@ def get_all_components(char, max_depth, depth=0, seen=None):
     components = set()
     decomposition = char_decomp.get(char, {}).get("decomposition", "")
     if decomposition:
-        # Collect all non-IDC characters from the decomposition
         for comp in decomposition:
-            if comp not in IDC_CHARS:
-                components.add(comp)
-                components.update(get_all_components(comp, max_depth, depth + 1, seen.copy()))
+            if comp in IDC_CHARS or comp == '?' or not is_valid_char(comp):
+                continue
+            components.add(comp)
+            components.update(get_all_components(comp, max_depth, depth + 1, seen.copy()))
     return components
 
 @st.cache_data
@@ -174,10 +183,11 @@ def build_component_map(max_depth=5):
     for char in char_decomp:
         components = {char}
         decomposition = char_decomp.get(char, {}).get("decomposition", "")
-        for comp in decomposition:
-            if is_valid_char(comp):
-                components.add(comp)
-                components.update(get_all_components(comp, max_depth))
+        if decomposition and '?' not in decomposition:
+            for comp in decomposition:
+                if is_valid_char(comp) and comp != '?':
+                    components.add(comp)
+                    components.update(get_all_components(comp, max_depth))
         for comp in components:
             component_map[comp].append(char)
     return component_map
@@ -440,7 +450,7 @@ def render_char_card(char, compounds):
     details = " ".join(f"<strong>{k}:</strong> {v}" for k, v in fields.items())
     st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
     if compounds and st.session_state.display_mode != "Single Character":
-        compounds_text = " ".join(sorted(compounds))
+        compounds_text = " ".join(sorted/compounds))
         st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
