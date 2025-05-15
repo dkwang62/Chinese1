@@ -433,7 +433,7 @@ def render_char_card(char, compounds):
 
 def main():
     component_map = build_component_map(max_depth=5)
-    st.markdown("<h1>🧩 Character Decomposition Explorer</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>🧩 Chinese Character Explorer</h1>", unsafe_allow_html=True)
 
     render_controls(component_map)
     if not st.session_state.selected_comp:
