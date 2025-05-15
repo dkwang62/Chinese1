@@ -1,3 +1,4 @@
+# Works with strokes1.json 
 import json
 import random
 from collections import defaultdict
