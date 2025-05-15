@@ -1,9 +1,11 @@
+# Working on May 16 5AM
 # Works with strokes1.json 
 import json
 import random
 from collections import defaultdict
 import streamlit as st
 import streamlit.components.v1 as components
+import uuid
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -69,7 +71,7 @@ st.markdown("""
         padding: 10px;
         border-radius: 5px;
         margin-top: 20px;
-   .ConcurrentHashMap
+    }
     .diagnostic-message.error { color: #c0392b; }
     .diagnostic-message.warning { color: #e67e22; }
     @media (max-width: 768px) {
@@ -143,6 +145,13 @@ def get_etymology_text(entry):
     details = clean_field(etymology.get("details", ""))
     return f"{hint}{'; Details: ' + details if details and details != '—' else ''}"
 
+def format_decomposition(char):
+    """Format the decomposition to show full structure instead of IDC alone."""
+    decomposition = char_decomp.get(char, {}).get("decomposition", "")
+    if not decomposition or decomposition[0] not in IDC_CHARS:
+        return decomposition or "—"
+    return decomposition
+
 def get_all_components(char, max_depth, depth=0, seen=None):
     if seen is None:
         seen = set()
@@ -151,11 +160,12 @@ def get_all_components(char, max_depth, depth=0, seen=None):
     seen.add(char)
     components = set()
     decomposition = char_decomp.get(char, {}).get("decomposition", "")
-    for comp in decomposition:
-        if comp in IDC_CHARS:
-            continue
-        components.add(comp)
-        components.update(get_all_components(comp, max_depth, depth + 1, seen.copy()))
+    if decomposition:
+        # Collect all non-IDC characters from the decomposition
+        for comp in decomposition:
+            if comp not in IDC_CHARS:
+                components.add(comp)
+                components.update(get_all_components(comp, max_depth, depth + 1, seen.copy()))
     return components
 
 @st.cache_data
@@ -314,6 +324,9 @@ def render_controls(component_map):
                 (st.session_state.component_idc == "No Filter" or
                  char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc))
             ]
+            # Add components from the selected character's decomposition
+            selected_char_components = get_all_components(st.session_state.selected_comp, max_depth=5) if st.session_state.selected_comp else set()
+            filtered_components.extend([comp for comp in selected_char_components if comp not in filtered_components])
             sorted_components = sorted(filtered_components, key=get_stroke_count)
             selectbox_index = 0
             if sorted_components:
@@ -341,7 +354,7 @@ def render_controls(component_map):
                         f"{c} (Pinyin: {clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
                         f"Strokes: {get_stroke_count(c) if get_stroke_count(c) != -1 else 'unknown'}, "
                         f"Radical: {clean_field(char_decomp.get(c, {}).get('radical', '—'))}, "
-                        f"IDC: {char_decomp.get(c, {}).get('decomposition', '')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
+                        f"Decomposition: {format_decomposition(c)}, "
                         f"Definition: {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))}, "
                         f"Etymology: {get_etymology_text(char_decomp.get(c, {}))})"
                     ),
@@ -415,13 +428,12 @@ def render_controls(component_map):
 
 def render_char_card(char, compounds):
     entry = char_decomp.get(char, {})
-    decomposition = entry.get("decomposition", "")
-    idc = decomposition[0] if decomposition and decomposition[0] in IDC_CHARS else "—"
+    decomposition = format_decomposition(char)
     fields = {
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Strokes": f"{get_stroke_count(char)} strokes" if get_stroke_count(char) != -1 else "unknown strokes",
         "Radical": clean_field(entry.get("radical", "—")),
-        "IDC": idc,
+        "Decomposition": decomposition,
         "Definition": clean_field(entry.get("definition", "No definition available")),
         "Etymology": get_etymology_text(entry)
     }
@@ -446,7 +458,7 @@ def main():
         "Pinyin": clean_field(entry.get("pinyin", "—")),
         "Strokes": f"{get_stroke_count(st.session_state.selected_comp)} strokes" if get_stroke_count(st.session_state.selected_comp) != -1 else "unknown strokes",
         "Radical": clean_field(entry.get("radical", "—")),
-        "IDC": entry.get("decomposition", "")[0] if entry.get("decomposition", "") and entry.get("decomposition", "")[0] in IDC_CHARS else "—",
+        "Decomposition": format_decomposition(st.session_state.selected_comp),
         "Definition": clean_field(entry.get("definition", "No definition available")),
         "Etymology": get_etymology_text(entry)
     }
@@ -470,10 +482,14 @@ def main():
     filtered_chars = chars if st.session_state.display_mode == "Single Character" else [c for c in chars if char_compounds[c]]
 
     if filtered_chars:
-        options = ["Select a character..."] + sorted(filtered_chars, key=get_stroke_count)
+        # Add components from the selected character's decomposition to output options
+        selected_char_components = get_all_components(st.session_state.selected_comp, max_depth=5) if st.session_state.selected_comp else set()
+        output_options = sorted(filtered_chars, key=get_stroke_count)
+        output_options.extend([comp for comp in selected_char_components if comp not in output_options and comp in char_decomp])
+        options = ["Select a character..."] + sorted(output_options, key=get_stroke_count)
         if (st.session_state.previous_selected_comp and
                 st.session_state.previous_selected_comp != st.session_state.selected_comp and
-                st.session_state.previous_selected_comp not in filtered_chars and
+                st.session_state.previous_selected_comp not in output_options and
                 st.session_state.previous_selected_comp in component_map):
             options.insert(1, st.session_state.previous_selected_comp)
         st.selectbox(
@@ -487,7 +503,7 @@ def main():
                 f"{c} (Pinyin: {clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
                 f"Strokes: {get_stroke_count(c) if get_stroke_count(c) != -1 else 'unknown'}, "
                 f"Radical: {clean_field(char_decomp.get(c, {}).get('radical', '—'))}, "
-                f"IDC: {char_decomp.get(c, {}).get('decomposition', '')[0] if char_decomp.get(c, {}).get('decomposition', '') and char_decomp.get(c, {}).get('decomposition', '')[0] in IDC_CHARS else '—'}, "
+                f"Decomposition: {format_decomposition(c)}, "
                 f"Definition: {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))}, "
                 f"Etymology: {get_etymology_text(char_decomp.get(c, {}))})"
             )
