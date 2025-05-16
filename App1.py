@@ -4,79 +4,90 @@ from collections import defaultdict
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Step 1: Test page config
-st.set_page_config(layout="wide")  # Try "centered" if "wide" causes stretching
-st.write("Debug: Page layout set to 'wide'")  # Confirm setting
+# Set page configuration
+st.set_page_config(layout="wide")
 
 # Global IDC characters
 IDC_CHARS = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
 
-# Step 2: Simplify CSS and hardcode font_scale for testing
+# Dynamic CSS function
 def apply_dynamic_css():
-    font_scale = 1.0  # Hardcode to isolate slider issues
+    font_scale = st.session_state.get('font_scale', 1.0)
     css = f"""
     <style>
         .selected-card {{
             background-color: #e8f4f8;
-            padding: 8px;
-            border-radius: 6px;
-            margin-bottom: 10px;
+            padding: 10px; /* Reduced from 15px for compactness */
+            border-radius: 8px; /* Reduced from 10px */
+            margin-bottom: 15px; /* Reduced from 20px */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
-            gap: 8px;
-            border-left: 3px solid #3498db;
+            gap: 10px; /* Reduced from 15px */
+            border-left: 4px solid #3498db; /* Reduced from 5px */
         }}
         .selected-char {{ font-size: calc(2.5em * {font_scale}); color: #e74c3c; margin: 0; }}
         .details {{ font-size: calc(1.5em * {font_scale}); color: #34495e; margin: 0; }}
         .details strong {{ color: #2c3e50; }}
-        .results-header {{ font-size: calc(1.5em * {font_scale}); color: #2c3e50; margin: 10px 0 8px; }}
+        .results-header {{ font-size: calc(1.5em * {font_scale}); color: #2c3e50; margin: 15px 0 10px; /* Adjusted margins */ }}
         .char-card {{
             background-color: #ffffff;
-            padding: 8px;
-            border-radius: 5px;
-            margin-bottom: 6px;
+            padding: 10px; /* Reduced from 15px */
+            border-radius: 6px; /* Reduced from 8px */
+            margin-bottom: 8px; /* Reduced from 10px */
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }}
+        .char-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }}
         .char-title {{ font-size: calc(1.4em * {font_scale}); color: #e74c3c; margin: 0; display: inline; }}
         .compounds-section {{
             background-color: #f1f8e9;
-            padding: 6px;
-            border-radius: 3px;
-            margin-top: 6px;
+            padding: 8px; /* Reduced from 10px */
+            border-radius: 4px; /* Reduced from 5px */
+            margin-top: 8px; /* Reduced from 10px */
         }}
-        .compounds-title {{ font-size: calc(1.1em * {font_scale}); color: #558b2f; margin: 0 0 3px; }}
+        .compounds-title {{ font-size: calc(1.1em * {font_scale}); color: #558b2f; margin: 0 0 4px; /* Adjusted margin */ }}
         .compounds-list {{ font-size: calc(1em * {font_scale}); color: #34495e; margin: 0; }}
         .stContainer {{
-            padding: 6px;
+            padding: 8px; /* Reduced from 10px */
             border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            margin-bottom: 8px;
+            border-radius: 6px; /* Reduced from 8px */
+            margin-bottom: 10px; /* Reduced from 15px */
         }}
         .stButton button {{
             background-color: #3498db;
             color: white;
-            border-radius: 3px;
+            border-radius: 4px; /* Reduced from 5px */
             font-size: calc(0.9em * {font_scale});
-            padding: 4px 8px;
+            padding: 5px 10px; /* Adjusted padding for compactness */
         }}
         .stButton button:hover {{
             background-color: #2980b9;
         }}
-        .stSelectbox, .stTextInput, .stRadio {{
+        .debug-section {{
+            background-color: #f5f5f5;
+            padding: 8px; /* Reduced from 10px */
+            border-radius: 4px; /* Reduced from 5px */
+            margin-top: 15px; /* Reduced from 20px */
+        }}
+        .diagnostic-message.error {{ color: #c0392b; }}
+        .diagnostic-message.warning {{ color: #e67e22; }}
+        .stSelectbox, .stTextInput, .stRadio, .stSlider {{
             font-size: calc(0.9em * {font_scale});
-            max-width: 300px;
         }}
         input[data-testid="stTextInput"]::placeholder {{
-            font-size: calc(0.9em * {font_scale});
+            font-size: calc(0.9em * {font_scale}); /* Ensure placeholder is visible */
             color: #999;
         }}
         @media (max-width: 768px) {{
-            .selected-card {{ flex-direction: column; align-items: flex-start; padding: 6px; }}
+            .selected-card {{ flex-direction: column; align-items: flex-start; padding: 8px; /* Reduced from 10px */ }}
             .selected-char {{ font-size: calc(2em * {font_scale}); }}
             .details, .compounds-list {{ font-size: calc(0.95em * {font_scale}); line-height: 1.5; }}
             .results-header {{ font-size: calc(1.3em * {font_scale}); }}
-            .char-card {{ padding: 6px; }}
+            .char-card {{ padding: 8px; /* Reduced from 10px */ }}
             .char-title {{ font-size: calc(1.2em * {font_scale}); }}
             .compounds-title {{ font-size: calc(1em * {font_scale}); }}
         }}
@@ -84,7 +95,7 @@ def apply_dynamic_css():
     """
     st.markdown(css, unsafe_allow_html=True)
 
-# Step 3: Log session state initialization
+# Initialize session state
 def init_session_state():
     config_options = [
         {"selected_comp": "爫", "stroke_count": 0, "radical": "No Filter", "selected_idc": "No Filter", "component_idc": "No Filter", "output_radical": "No Filter", "display_mode": "Single Character"},
@@ -113,8 +124,6 @@ def init_session_state():
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
-    # Debug log
-    st.write(f"Debug: Initial font_scale = {st.session_state.font_scale}")
 
 init_session_state()
 
@@ -123,6 +132,7 @@ def load_char_decomp():
     try:
         with open("strokes1.json", "r", encoding="utf-8") as f:
             data = json.load(f)
+            # Clean decompositions by removing '?' and logging warnings
             for entry in data:
                 if '?' in entry.get("decomposition", ""):
                     char = entry["character"]
@@ -156,6 +166,7 @@ def get_etymology_text(entry):
     return f"{hint}{'; Details: ' + details if details and details != '—' else ''}"
 
 def format_decomposition(char):
+    """Format the decomposition to show full structure, ignoring invalid components."""
     decomposition = char_decomp.get(char, {}).get("decomposition", "")
     if not decomposition or '?' in decomposition:
         return "—"
@@ -271,10 +282,11 @@ def render_controls(component_map):
         "⿻": "Overlaid"
     }
 
+    # Filter row for component input filters
     with st.container():
         st.markdown("### Component Filters")
         st.caption("Filter components by stroke count, radical, or structure.")
-        col1, col2, col3 = st.columns([1, 1, 1], gap="small")  # Step 4: Reduce column spacing
+        col1, col2, col3 = st.columns([1, 1, 1])  # Adjusted to [1, 1, 1] for even distribution
 
         with col1:
             stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
@@ -321,10 +333,11 @@ def render_controls(component_map):
                 key="component_idc"
             )
 
+    # Input row for component selection
     with st.container():
         st.markdown("### Select Input Component")
         st.caption("Choose or type a single character to explore its related characters.")
-        col4, col5 = st.columns([2.5, 1], gap="small")
+        col4, col5 = st.columns([3, 1])  # Adjusted to [3, 1] for better balance
 
         with col4:
             filtered_components = [
@@ -334,6 +347,7 @@ def render_controls(component_map):
                 (st.session_state.component_idc == "No Filter" or
                  char_decomp.get(comp, {}).get("decomposition", "").startswith(st.session_state.component_idc))
             ]
+            # Add components from the selected character's decomposition
             selected_char_components = get_all_components(st.session_state.selected_comp, max_depth=5) if st.session_state.selected_comp else set()
             filtered_components.extend([comp for comp in selected_char_components if comp not in filtered_components])
             sorted_components = sorted(filtered_components, key=get_stroke_count)
@@ -358,7 +372,15 @@ def render_controls(component_map):
                     "Select a component:",
                     options=sorted_components,
                     index=selectbox_index,
-                    format_func=lambda c: c,  # Step 5: Simplify format_func for testing
+                    format_func=lambda c: (
+                        c if c == "Select a component..." else
+                        f"{c} (Pinyin: {clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
+                        f"Strokes: {get_stroke_count(c) if get_stroke_count(c) != -1 else 'unknown'}, "
+                        f"Radical: {clean_field(char_decomp.get(c, {}).get('radical', '—'))}, "
+                        f"Decomposition: {format_decomposition(c)}, "
+                        f"Definition: {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))}, "
+                        f"Etymology: {get_etymology_text(char_decomp.get(c, {}))})"
+                    ),
                     key="selected_comp",
                     on_change=on_selectbox_change
                 )
@@ -373,22 +395,22 @@ def render_controls(component_map):
                 placeholder="Enter one Chinese character"
             )
 
-    # Step 6: Comment out JavaScript to test its impact
-    # components.html("""
-    #     <script>
-    #         let debounceTimeout = null;
-    #         document.addEventListener('paste', function(e) {
-    #             clearTimeout(debounceTimeout);
-    #             const text = (e.clipboardData || window.clipboardData).getData('text').trim();
-    #             const input = document.querySelector('input[data-testid="stTextInput"]');
-    #             if (input) {
-    #                 input.value = text;
-    #                 input.dispatchEvent(new Event('input', { bubbles: true }));
-    #                 input.dispatchEvent(new Event('change', { bubbles: true }));
-    #             }
-    #         });
-    #     </script>
-    # """, height=0)
+    # JavaScript to handle paste events
+    components.html("""
+        <script>
+            let debounceTimeout = null;
+            document.addEventListener('paste', function(e) {
+                clearTimeout(debounceTimeout);
+                const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+                const input = document.querySelector('input[data-testid="stTextInput"]');
+                if (input) {
+                    input.value = text;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        </script>
+    """, height=0)
 
     with st.container():
         st.button("Reset Filters", on_click=on_reset_filters, disabled=not is_reset_needed())
@@ -396,7 +418,7 @@ def render_controls(component_map):
     with st.container():
         st.markdown("### Filter Output Characters")
         st.caption("Customize the output by character structure and display mode.")
-        col6, col7, col8 = st.columns([1, 1, 1], gap="small")
+        col6, col7, col8 = st.columns([1, 1, 1])  # Adjusted to [1, 1, 1] for even distribution
 
         with col6:
             chars = component_map.get(st.session_state.selected_comp, [])
@@ -426,7 +448,7 @@ def render_controls(component_map):
                 key="output_radical"
             )
         with col8:
-            st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"], key="display_mode", horizontal=False)  # Step 7: Test vertical radio buttons
+            st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"], key="display_mode", horizontal=True)
 
 def render_char_card(char, compounds):
     entry = char_decomp.get(char, {})
@@ -440,8 +462,11 @@ def render_char_card(char, compounds):
         "Etymology": get_etymology_text(entry)
     }
     details = " ".join(f"<strong>{k}:</strong> {v}" for k, v in fields.items())
-    # Step 8: Simplify card HTML for testing
-    st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div class='char-card'><h3 class='char-title'>{char}</h3><p class='details'>{details}</p>""", unsafe_allow_html=True)
+    if compounds and st.session_state.display_mode != "Single Character":
+        compounds_text = " ".join(sorted(compounds))
+        st.markdown(f"""<div class='compounds-section'><p class='compounds-title'>{st.session_state.display_mode} for {char}:</p><p class='compounds-list'>{compounds_text}</p></div>""", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 def main():
     component_map = build_component_map(max_depth=5)
@@ -465,6 +490,7 @@ def main():
     details = " ".join(f"<strong>{k}:</strong> {v}" for k, v in fields.items())
     st.markdown(f"""<div class='selected-card'><h2 class='selected-char'>{st.session_state.selected_comp}</h2><p class='details'>{details}</p></div>""", unsafe_allow_html=True)
 
+    # Compute output characters without component filter influence
     chars = [c for c in component_map.get(st.session_state.selected_comp, []) if c in char_decomp]
     if st.session_state.selected_idc != "No Filter":
         chars = [c for c in chars if char_decomp.get(c, {}).get("decomposition", "").startswith(st.session_state.selected_idc)]
@@ -481,6 +507,7 @@ def main():
     filtered_chars = chars if st.session_state.display_mode == "Single Character" else [c for c in chars if char_compounds[c]]
 
     if filtered_chars:
+        # Add components from the selected character's decomposition to output options
         selected_char_components = get_all_components(st.session_state.selected_comp, max_depth=5) if st.session_state.selected_comp else set()
         output_options = sorted(filtered_chars, key=get_stroke_count)
         output_options.extend([comp for comp in selected_char_components if comp not in output_options and comp in char_decomp])
@@ -496,30 +523,58 @@ def main():
             key="output_char_select",
             on_change=on_output_char_select,
             args=(component_map,),
-            format_func=lambda c: c  # Step 9: Simplify format_func
+            format_func=lambda c: (
+                c if c == "Select a character..." else
+                f"{c} (Pinyin: {clean_field(char_decomp.get(c, {}).get('pinyin', '—'))}, "
+                f"Strokes: {get_stroke_count(c) if get_stroke_count(c) != -1 else 'unknown'}, "
+                f"Radical: {clean_field(char_decomp.get(c, {}).get('radical', '—'))}, "
+                f"Decomposition: {format_decomposition(c)}, "
+                f"Definition: {clean_field(char_decomp.get(c, {}).get('definition', 'No definition available'))}, "
+                f"Etymology: {get_etymology_text(char_decomp.get(c, {}))})"
+            )
         )
 
     st.markdown(f"<h2 class='results-header'>🧬 Results for {st.session_state.selected_comp} — {len(filtered_chars)} result(s)</h2>", unsafe_allow_html=True)
     for char in sorted(filtered_chars, key=get_stroke_count):
         render_char_card(char, char_compounds.get(char, []))
 
-    # Step 10: Remove debug section to isolate its impact
-    # with st.expander("Debug Information (For Developers)", expanded=False):
-    #     st.markdown("<div class='debug-section'>", unsafe_allow_html=True)
-    #     st.slider("Adjust Font Size:", 0.7, 1.3, st.session_state.font_scale, 0.1, key="font_scale")
-    #     st.write(f"Total components: {len(component_map)}")
-    #     st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
-    #     st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
-    #     st.write(f"Stroke count: {st.session_state.get('stroke_count', 0)}")
-    #     st.write(f"Radical: {st.session_state.get('radical', 'No Filter')}")
-    #     st.write(f"Structure IDC: {st.session_state.get('component_idc', 'No Filter')}")
-    #     st.write(f"Font scale: {st.session_state.font_scale}")
-    #     st.write(f"Debug log: {st.session_state.get('debug_info', '')}")
-    #     st.markdown("### Errors and Warnings")
-    #     for msg in st.session_state.diagnostic_messages:
-    #         class_name = 'error' if msg['type'] == 'error' else 'warning'
-    #         st.markdown(f"<p class='diagnostic-message {class_name}'>{msg['type'].capitalize()}: {msg['message']}</p>", unsafe_allow_html=True)
-    #     st.markdown("</div>", unsafe_allow_html=True)
+    if filtered_chars and st.session_state.display_mode != "Single Character":
+        with st.expander("Export Compounds"):
+            st.caption("Copy this text to get pinyin and meanings for the displayed compounds.")
+            export_text = "Give me the hanyu pinyin and meaning of each compound phrase in one line a phrase in a downloadable word file\n\n"
+            export_text += "\n".join(
+                compound
+                for char in filtered_chars
+                for compound in char_compounds.get(char, [])
+            )
+            st.text_area("Export Text", export_text, height=200, key="export_text")
+            components.html(f"""
+                <textarea id="copyTarget" style="opacity:0;position:absolute;left-9999px;">{export_text}</textarea>
+                <script>
+                const copyText = document.getElementById("copyTarget");
+                copyText.select();
+                document.execCommand("copy");
+                </script>
+            """, height=0)
+
+    # Render debug information and diagnostics at the end
+    radicals = [comp for comp in component_map if char_decomp.get(comp, {}).get("radical", "") == comp]
+    with st.expander("Debug Information (For Developers)", expanded=False):
+        st.markdown("<div class='debug-section'>", unsafe_allow_html=True)
+        st.slider("Adjust Font Size:", 0.7, 1.3, st.session_state.font_scale, 0.1, key="font_scale")
+        st.write(f"Total components: {len(component_map)}, Radicals: {len(radicals)}")
+        st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
+        st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
+        st.write(f"Stroke count: {st.session_state.get('stroke_count', 0)}")
+        st.write(f"Radical: {st.session_state.get('radical', 'No Filter')}")
+        st.write(f"Structure IDC: {st.session_state.get('component_idc', 'No Filter')}")
+        st.write(f"Font scale: {st.session_state.font_scale}")
+        st.write(f"Debug log: {st.session_state.get('debug_info', '')}")
+        st.markdown("### Errors and Warnings")
+        for msg in st.session_state.diagnostic_messages:
+            class_name = 'error' if msg['type'] == 'error' else 'warning'
+            st.markdown(f"<p class='diagnostic-message {class_name}'>{msg['type'].capitalize()}: {msg['message']}</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
