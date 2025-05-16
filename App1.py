@@ -10,78 +10,85 @@ st.set_page_config(layout="wide")
 # Global IDC characters
 IDC_CHARS = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
 
-# Custom CSS
-st.markdown("""
-<style>
-    .selected-card {
-        background-color: #e8f4f8;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        border-left: 5px solid #3498db;
-    }
-    .selected-char { font-size: 2.5em; color: #e74c3c; margin: 0; }
-    .details { font-size: 1.5em; color: #34495e; margin: 0; }
-    .details strong { color: #2c3e50; }
-    .results-header { font-size: 1.5em; color: #2c3e50; margin: 20px 0 10px; }
-    .char-card {
-        background-color: #ffffff;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-    }
-    .char-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-    }
-    .char-title { font-size: 1.4em; color: #e74c3c; margin: 0; display: inline; }
-    .compounds-section {
-        background-color: #f1f8e9;
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 10px;
-    }
-    .compounds-title { font-size: 1.1em; color: #558b2f; margin: 0 0 5px; }
-    .compounds-list { font-size: 1em; color: #34495e; margin: 0; }
-    .stContainer {
-        padding: 10px;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        margin-bottom: 15px;
-    }
-    .stButton button {
-        background-color: #3498db;
-        color: white;
-        border-radius: 5px;
-    }
-    .stButton button:hover {
-        background-color: #2980b9;
-    }
-    .debug-section {
-        background-color: #f5f5f5;
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 20px;
-    }
-    .diagnostic-message.error { color: #c0392b; }
-    .diagnostic-message.warning { color: #e67e22; }
-    @media (max-width: 768px) {
-        .selected-card { flex-direction: column; align-items: flex-start; padding: 10px; }
-        .selected-char { font-size: 2em; }
-        .details, .compounds-list { font-size: 0.95em; line-height: 1.5; }
-        .results-header { font-size: 1.3em; }
-        .char-card { padding: 10px; }
-        .char-title { font-size: 1.2em; }
-        .compounds-title { font-size: 1em; }
-    }
-</style>
-""", unsafe_allow_html=True)
+# Dynamic CSS function
+def apply_dynamic_css():
+    font_scale = st.session_state.get('font_scale', 1.0)
+    css = f"""
+    <style>
+        .selected-card {{
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 5px solid #3498db;
+        }}
+        .selected-char {{ font-size: calc(2.5em * {font_scale}); color: #e74c3c; margin: 0; }}
+        .details {{ font-size: calc(1.5em * {font_scale}); color: #34495e; margin: 0; }}
+        .details strong {{ color: #2c3e50; }}
+        .results-header {{ font-size: calc(1.5em * {font_scale}); color: #2c3e50; margin: 20px 0 10px; }}
+        .char-card {{
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }}
+        .char-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }}
+        .char-title {{ font-size: calc(1.4em * {font_scale}); color: #e74c3c; margin: 0; display: inline; }}
+        .compounds-section {{
+            background-color: #f1f8e9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }}
+        .compounds-title {{ font-size: calc(1.1em * {font_scale}); color: #558b2f; margin: 0 0 5px; }}
+        .compounds-list {{ font-size: calc(1em * {font_scale}); color: #34495e; margin: 0; }}
+        .stContainer {{
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }}
+        .stButton button {{
+            background-color: #3498db;
+            color: white;
+            border-radius: 5px;
+            font-size: calc(0.9em * {font_scale});
+        }}
+        .stButton button:hover {{
+            background-color: #2980b9;
+        }}
+        .debug-section {{
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }}
+        .diagnostic-message.error {{ color: #c0392b; }}
+        .diagnostic-message.warning {{ color: #e67e22; }}
+        .stSelectbox, .stTextInput, .stRadio, .stSlider {{
+            font-size: calc(0.9em * {font_scale});
+        }}
+        @media (max-width: 768px) {{
+            .selected-card {{ flex-direction: column; align-items: flex-start; padding: 10px; }}
+            .selected-char {{ font-size: calc(2em * {font_scale}); }}
+            .details, .compounds-list {{ font-size: calc(0.95em * {font_scale}); line-height: 1.5; }}
+            .results-header {{ font-size: calc(1.3em * {font_scale}); }}
+            .char-card {{ padding: 10px; }}
+            .char-title {{ font-size: calc(1.2em * {font_scale}); }}
+            .compounds-title {{ font-size: calc(1em * {font_scale}); }}
+        }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
 
 # Initialize session state
 def init_session_state():
@@ -107,7 +114,8 @@ def init_session_state():
         "results_per_page": 50,
         "previous_selected_comp": selected_config["selected_comp"],
         "debug_info": "",
-        "diagnostic_messages": []  # Store errors and warnings
+        "diagnostic_messages": [],
+        "font_scale": 1.0
     }
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
@@ -456,6 +464,7 @@ def render_char_card(char, compounds):
 
 def main():
     component_map = build_component_map(max_depth=5)
+    apply_dynamic_css()
     st.markdown("<h1>🧩 汉字 Radix</h1>", unsafe_allow_html=True)
 
     render_controls(component_map)
@@ -546,12 +555,14 @@ def main():
     radicals = [comp for comp in component_map if char_decomp.get(comp, {}).get("radical", "") == comp]
     with st.expander("Debug Information (For Developers)", expanded=False):
         st.markdown("<div class='debug-section'>", unsafe_allow_html=True)
+        st.slider("Adjust Font Size:", 0.7, 1.3, st.session_state.font_scale, 0.1, key="font_scale")
         st.write(f"Total components: {len(component_map)}, Radicals: {len(radicals)}")
         st.write(f"Current text_input_comp: '{st.session_state.get('text_input_comp', '')}'")
         st.write(f"Current selected_comp: '{st.session_state.get('selected_comp', '')}'")
         st.write(f"Stroke count: {st.session_state.get('stroke_count', 0)}")
         st.write(f"Radical: {st.session_state.get('radical', 'No Filter')}")
         st.write(f"Structure IDC: {st.session_state.get('component_idc', 'No Filter')}")
+        st.write(f"Font scale: {st.session_state.font_scale}")
         st.write(f"Debug log: {st.session_state.get('debug_info', '')}")
         st.markdown("### Errors and Warnings")
         for msg in st.session_state.diagnostic_messages:
