@@ -17,24 +17,24 @@ def apply_dynamic_css():
     <style>
         .selected-card {{
             background-color: #e8f4f8;
-            padding: 10px; /* Reduced from 15px for compactness */
-            border-radius: 8px; /* Reduced from 10px */
-            margin-bottom: 15px; /* Reduced from 20px */
+            padding: 8px; /* Reduced from 10px for tighter fit */
+            border-radius: 6px; /* Reduced from 8px */
+            margin-bottom: 10px; /* Reduced from 15px */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
-            gap: 10px; /* Reduced from 15px */
-            border-left: 4px solid #3498db; /* Reduced from 5px */
+            gap: 8px; /* Reduced from 10px */
+            border-left: 3px solid #3498db; /* Reduced from 4px */
         }}
         .selected-char {{ font-size: calc(2.5em * {font_scale}); color: #e74c3c; margin: 0; }}
         .details {{ font-size: calc(1.5em * {font_scale}); color: #34495e; margin: 0; }}
         .details strong {{ color: #2c3e50; }}
-        .results-header {{ font-size: calc(1.5em * {font_scale}); color: #2c3e50; margin: 15px 0 10px; /* Adjusted margins */ }}
+        .results-header {{ font-size: calc(1.5em * {font_scale}); color: #2c3e50; margin: 10px 0 8px; /* Adjusted margins */ }}
         .char-card {{
             background-color: #ffffff;
-            padding: 10px; /* Reduced from 15px */
-            border-radius: 6px; /* Reduced from 8px */
-            margin-bottom: 8px; /* Reduced from 10px */
+            padding: 8px; /* Reduced from 10px */
+            border-radius: 5px; /* Reduced from 6px */
+            margin-bottom: 6px; /* Reduced from 8px */
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             transition: transform 0.2s;
         }}
@@ -45,49 +45,50 @@ def apply_dynamic_css():
         .char-title {{ font-size: calc(1.4em * {font_scale}); color: #e74c3c; margin: 0; display: inline; }}
         .compounds-section {{
             background-color: #f1f8e9;
-            padding: 8px; /* Reduced from 10px */
-            border-radius: 4px; /* Reduced from 5px */
-            margin-top: 8px; /* Reduced from 10px */
+            padding: 6px; /* Reduced from 8px */
+            border-radius: 3px; /* Reduced from 4px */
+            margin-top: 6px; /* Reduced from 8px */
         }}
-        .compounds-title {{ font-size: calc(1.1em * {font_scale}); color: #558b2f; margin: 0 0 4px; /* Adjusted margin */ }}
+        .compounds-title {{ font-size: calc(1.1em * {font_scale}); color: #558b2f; margin: 0 0 3px; /* Adjusted margin */ }}
         .compounds-list {{ font-size: calc(1em * {font_scale}); color: #34495e; margin: 0; }}
         .stContainer {{
-            padding: 8px; /* Reduced from 10px */
+            padding: 6px; /* Reduced from 8px */
             border: 1px solid #e0e0e0;
-            border-radius: 6px; /* Reduced from 8px */
-            margin-bottom: 10px; /* Reduced from 15px */
+            border-radius: 5px; /* Reduced from 6px */
+            margin-bottom: 8px; /* Reduced from 10px */
         }}
         .stButton button {{
             background-color: #3498db;
             color: white;
-            border-radius: 4px; /* Reduced from 5px */
+            border-radius: 3px; /* Reduced from 4px */
             font-size: calc(0.9em * {font_scale});
-            padding: 5px 10px; /* Adjusted padding for compactness */
+            padding: 4px 8px; /* Adjusted from 5px 10px for compactness */
         }}
         .stButton button:hover {{
             background-color: #2980b9;
         }}
         .debug-section {{
             background-color: #f5f5f5;
-            padding: 8px; /* Reduced from 10px */
-            border-radius: 4px; /* Reduced from 5px */
-            margin-top: 15px; /* Reduced from 20px */
+            padding: 6px; /* Reduced from 8px */
+            border-radius: 3px; /* Reduced from 4px */
+            margin-top: 10px; /* Reduced from 15px */
         }}
         .diagnostic-message.error {{ color: #c0392b; }}
         .diagnostic-message.warning {{ color: #e67e22; }}
         .stSelectbox, .stTextInput, .stRadio, .stSlider {{
             font-size: calc(0.9em * {font_scale});
+            max-width: 300px; /* Added to constrain dropdown width */
         }}
         input[data-testid="stTextInput"]::placeholder {{
-            font-size: calc(0.9em * {font_scale}); /* Ensure placeholder is visible */
+            font-size: calc(0.9em * {font_scale});
             color: #999;
         }}
         @media (max-width: 768px) {{
-            .selected-card {{ flex-direction: column; align-items: flex-start; padding: 8px; /* Reduced from 10px */ }}
+            .selected-card {{ flex-direction: column; align-items: flex-start; padding: 6px; /* Reduced from 8px */ }}
             .selected-char {{ font-size: calc(2em * {font_scale}); }}
             .details, .compounds-list {{ font-size: calc(0.95em * {font_scale}); line-height: 1.5; }}
             .results-header {{ font-size: calc(1.3em * {font_scale}); }}
-            .char-card {{ padding: 8px; /* Reduced from 10px */ }}
+            .char-card {{ padding: 6px; /* Reduced from 8px */ }}
             .char-title {{ font-size: calc(1.2em * {font_scale}); }}
             .compounds-title {{ font-size: calc(1em * {font_scale}); }}
         }}
@@ -286,7 +287,7 @@ def render_controls(component_map):
     with st.container():
         st.markdown("### Component Filters")
         st.caption("Filter components by stroke count, radical, or structure.")
-        col1, col2, col3 = st.columns([1, 1, 1])  # Adjusted to [1, 1, 1] for even distribution
+        col1, col2, col3 = st.columns([1, 1, 1])
 
         with col1:
             stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
@@ -337,7 +338,7 @@ def render_controls(component_map):
     with st.container():
         st.markdown("### Select Input Component")
         st.caption("Choose or type a single character to explore its related characters.")
-        col4, col5 = st.columns([3, 1])  # Adjusted to [3, 1] for better balance
+        col4, col5 = st.columns([2.5, 1])  # Adjusted from 3, 1 to allow more space for text input
 
         with col4:
             filtered_components = [
@@ -418,7 +419,7 @@ def render_controls(component_map):
     with st.container():
         st.markdown("### Filter Output Characters")
         st.caption("Customize the output by character structure and display mode.")
-        col6, col7, col8 = st.columns([1, 1, 1])  # Adjusted to [1, 1, 1] for even distribution
+        col6, col7, col8 = st.columns([1, 1, 1])
 
         with col6:
             chars = component_map.get(st.session_state.selected_comp, [])
