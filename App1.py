@@ -17,24 +17,24 @@ def apply_dynamic_css():
     <style>
         .selected-card {{
             background-color: #e8f4f8;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 10px; /* Reduced from 15px for compactness */
+            border-radius: 8px; /* Reduced from 10px */
+            margin-bottom: 15px; /* Reduced from 20px */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
-            gap: 15px;
-            border-left: 5px solid #3498db;
+            gap: 10px; /* Reduced from 15px */
+            border-left: 4px solid #3498db; /* Reduced from 5px */
         }}
         .selected-char {{ font-size: calc(2.5em * {font_scale}); color: #e74c3c; margin: 0; }}
         .details {{ font-size: calc(1.5em * {font_scale}); color: #34495e; margin: 0; }}
         .details strong {{ color: #2c3e50; }}
-        .results-header {{ font-size: calc(1.5em * {font_scale}); color: #2c3e50; margin: 20px 0 10px; }}
+        .results-header {{ font-size: calc(1.5em * {font_scale}); color: #2c3e50; margin: 15px 0 10px; /* Adjusted margins */ }}
         .char-card {{
             background-color: #ffffff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            padding: 10px; /* Reduced from 15px */
+            border-radius: 6px; /* Reduced from 8px */
+            margin-bottom: 8px; /* Reduced from 10px */
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             transition: transform 0.2s;
         }}
@@ -45,44 +45,49 @@ def apply_dynamic_css():
         .char-title {{ font-size: calc(1.4em * {font_scale}); color: #e74c3c; margin: 0; display: inline; }}
         .compounds-section {{
             background-color: #f1f8e9;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
+            padding: 8px; /* Reduced from 10px */
+            border-radius: 4px; /* Reduced from 5px */
+            margin-top: 8px; /* Reduced from 10px */
         }}
-        .compounds-title {{ font-size: calc(1.1em * {font_scale}); color: #558b2f; margin: 0 0 5px; }}
+        .compounds-title {{ font-size: calc(1.1em * {font_scale}); color: #558b2f; margin: 0 0 4px; /* Adjusted margin */ }}
         .compounds-list {{ font-size: calc(1em * {font_scale}); color: #34495e; margin: 0; }}
         .stContainer {{
-            padding: 10px;
+            padding: 8px; /* Reduced from 10px */
             border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            border-radius: 6px; /* Reduced from 8px */
+            margin-bottom: 10px; /* Reduced from 15px */
         }}
         .stButton button {{
             background-color: #3498db;
             color: white;
-            border-radius: 5px;
+            border-radius: 4px; /* Reduced from 5px */
             font-size: calc(0.9em * {font_scale});
+            padding: 5px 10px; /* Adjusted padding for compactness */
         }}
         .stButton button:hover {{
             background-color: #2980b9;
         }}
         .debug-section {{
             background-color: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 20px;
+            padding: 8px; /* Reduced from 10px */
+            border-radius: 4px; /* Reduced from 5px */
+            margin-top: 15px; /* Reduced from 20px */
         }}
         .diagnostic-message.error {{ color: #c0392b; }}
         .diagnostic-message.warning {{ color: #e67e22; }}
         .stSelectbox, .stTextInput, .stRadio, .stSlider {{
             font-size: calc(0.9em * {font_scale});
         }}
+        input[data-testid="stTextInput"]::placeholder {{
+            font-size: calc(0.9em * {font_scale}); /* Ensure placeholder is visible */
+            color: #999;
+        }}
         @media (max-width: 768px) {{
-            .selected-card {{ flex-direction: column; align-items: flex-start; padding: 10px; }}
+            .selected-card {{ flex-direction: column; align-items: flex-start; padding: 8px; /* Reduced from 10px */ }}
             .selected-char {{ font-size: calc(2em * {font_scale}); }}
             .details, .compounds-list {{ font-size: calc(0.95em * {font_scale}); line-height: 1.5; }}
             .results-header {{ font-size: calc(1.3em * {font_scale}); }}
-            .char-card {{ padding: 10px; }}
+            .char-card {{ padding: 8px; /* Reduced from 10px */ }}
             .char-title {{ font-size: calc(1.2em * {font_scale}); }}
             .compounds-title {{ font-size: calc(1em * {font_scale}); }}
         }}
@@ -281,7 +286,7 @@ def render_controls(component_map):
     with st.container():
         st.markdown("### Component Filters")
         st.caption("Filter components by stroke count, radical, or structure.")
-        col1, col2, col3 = st.columns([0.4, 0.4, 0.4])
+        col1, col2, col3 = st.columns([1, 1, 1])  # Adjusted to [1, 1, 1] for even distribution
 
         with col1:
             stroke_counts = sorted(set(get_stroke_count(comp) for comp in component_map if get_stroke_count(comp) != -1))
@@ -332,7 +337,7 @@ def render_controls(component_map):
     with st.container():
         st.markdown("### Select Input Component")
         st.caption("Choose or type a single character to explore its related characters.")
-        col4, col5 = st.columns([1.5, 0.2])
+        col4, col5 = st.columns([3, 1])  # Adjusted to [3, 1] for better balance
 
         with col4:
             filtered_components = [
@@ -413,7 +418,8 @@ def render_controls(component_map):
     with st.container():
         st.markdown("### Filter Output Characters")
         st.caption("Customize the output by character structure and display mode.")
-        col6, col7, col8 = st.columns([0.33, 0.33, 0.34])
+        col6, col7, col8 = st.columns([1, 1, 1])  # Adjusted to [1, 1, 1] for even distribution
+
         with col6:
             chars = component_map.get(st.session_state.selected_comp, [])
             dynamic_idc_options = {"No Filter"} | {
@@ -442,7 +448,7 @@ def render_controls(component_map):
                 key="output_radical"
             )
         with col8:
-            st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"], key="display_mode")
+            st.radio("Output Type:", options=["Single Character", "2-Character Phrases", "3-Character Phrases", "4-Character Phrases"], key="display_mode", horizontal=True)
 
 def render_char_card(char, compounds):
     entry = char_decomp.get(char, {})
@@ -543,7 +549,7 @@ def main():
             )
             st.text_area("Export Text", export_text, height=200, key="export_text")
             components.html(f"""
-                <textarea id="copyTarget" style="opacity:0;position:absolute;left:-9999px;">{export_text}</textarea>
+                <textarea id="copyTarget" style="opacity:0;position:absolute;left-9999px;">{export_text}</textarea>
                 <script>
                 const copyText = document.getElementById("copyTarget");
                 copyText.select();
