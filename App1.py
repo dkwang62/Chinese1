@@ -7,6 +7,9 @@ import streamlit.components.v1 as components
 # Set page configuration
 st.set_page_config(layout="wide")
 
+st.image("/mnt/data/7b45a620-cddf-4b32-a4fe-89a4f4e505a7.png", width=120)
+st.markdown("<h1 style='text-align: center;'>Marriott Vacation Club Points Calculator</h1>", unsafe_allow_html=True)
+
 # Global IDC characters
 IDC_CHARS = {'⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿻'}
 
